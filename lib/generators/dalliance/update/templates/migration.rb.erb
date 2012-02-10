@@ -1,0 +1,11 @@
+class <%= migration_class_name %> < ActiveRecord::Migration
+  def self.up
+    add_column :<%= name.underscore.camelize.tableize %>, :dalliance_error_hash, :text
+    add_column :<%= name.underscore.camelize.tableize %>, :dalliance_status, :string, :null => false, :default => 'pending'
+  end
+
+  def self.down
+    remove_column :<%= name.underscore.camelize.tableize %>, :dalliance_error_hash
+    remove_column :<%= name.underscore.camelize.tableize %>, :dalliance_status
+  end
+end
