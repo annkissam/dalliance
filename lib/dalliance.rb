@@ -17,6 +17,10 @@ module Dalliance
       options[:background_processing]
     end
     
+    def background_processing=(value)
+      options[:background_processing] = value
+    end
+    
     def configure
       yield(self) if block_given?
     end
@@ -28,10 +32,10 @@ module Dalliance
     serialize :dalliance_error_hash, Hash
     
     #BEGIN state_machine(s)
-    scope :dalliance_pending, where(:dalliance_status => 'pending')
-    scope :dalliance_processing, where(:dalliance_status => 'processing')
-    scope :dalliance_processing_error, where(:dalliance_status => 'processing_error')
-    scope :dalliance_completed, where(:dalliance_status => 'completed')
+    scope :pending, where(:dalliance_status => 'pending')
+    scope :processing, where(:dalliance_status => 'processing')
+    scope :processing_error, where(:dalliance_status => 'processing_error')
+    scope :completed, where(:dalliance_status => 'completed')
 
     state_machine :dalliance_status, :initial => :pending do
       state :pending
@@ -64,6 +68,14 @@ module Dalliance
     end
   end
   
+  def error_or_completed?
+    processing_error? || completed?
+  end
+  
+  def pending_or_processing?
+    pending? || processing?
+  end
+  
   #Force backgound_processing w/ true
   def dalliance_background_process(backgound_processing = nil)
     if backgound_processing || (backgound_processing.nil? && Dalliance.background_processing?)
@@ -93,7 +105,7 @@ module Dalliance
       raise e unless backgound_processing
     ensure
       if dalliance_progress_meter
-        dalliance_progress_meter.destroy 
+        dalliance_progress_meter.destroy
       end
     end
   end

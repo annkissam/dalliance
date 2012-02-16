@@ -21,6 +21,14 @@ module Dalliance
       self[:total_count] ||= 1
     end
     
+    def total_count=(count)
+      if count <= 0
+        self[:total_count] = 1
+      else
+        self[:total_count] = count
+      end
+    end
+    
     before_validation :calculate_progress
 
     def calculate_progress

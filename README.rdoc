@@ -30,7 +30,7 @@ Handle your migrations:
 Create a method called dalliance_progress_meter_total_count
 (or provide the dalliance_progress_meter_total_count_method option)
 
-Inside process_method call progress_meter.increment! after each iteration
+Inside process_method call dalliance_progress_meter.increment! after each iteration
 
 In your views you can then call dalliance_progress to get feedback on your asynchronous process
      
