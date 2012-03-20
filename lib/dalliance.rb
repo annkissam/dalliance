@@ -1,4 +1,5 @@
 require 'dalliance/version'
+require 'dalliance/railtie'
 
 require 'dalliance/progress_meter'
 
@@ -130,22 +131,51 @@ module Dalliance
       1
     end
   end
-end
-
-#http://yehudakatz.com/2009/11/12/better-ruby-idioms/
-class ActiveRecord::Base
-  def self.dalliance(*args)
-    options = args.last.is_a?(Hash) ? Dalliance.options.merge(args.pop) : Dalliance.options
+  
+  module Glue
+    extend ActiveSupport::Concern
     
-    case args.length
-    when 1
-      options[:dalliance_method] = args[0]
-    else 
-      raise ArgumentError, "Incorrect number of Arguements provided" 
+    included do
+      class_attribute :dalliance_options if respond_to?(:class_attribute)
     end
     
-    cattr_accessor :dalliance_options
-    self.dalliance_options = options
-    include Dalliance
+    module ClassMethods
+      def dalliance(*args)
+        options = args.last.is_a?(Hash) ? Dalliance.options.merge(args.pop) : Dalliance.options
+
+        case args.length
+        when 1
+          options[:dalliance_method] = args[0]
+        else 
+          raise ArgumentError, "Incorrect number of Arguements provided" 
+        end
+        
+        if dalliance_options.nil?
+          if respond_to?(:class_attribute)
+            self.dalliance_options = {}
+          else
+            write_inheritable_attribute(:dalliance_options, {})
+          end
+        else
+          if respond_to?(:class_attribute)
+            self.dalliance_options = self.dalliance_options.dup
+          else
+            write_inheritable_attribute(:dalliance_options, self.dalliance_options.dup)
+          end
+        end
+        
+        self.dalliance_options.merge!(options)
+        
+        include Dalliance
+      end
+      
+      def dalliance_options
+        if respond_to?(:class_attribute)
+          self.dalliance_options
+        else
+          read_inheritable_attribute(:dalliance_options)
+        end
+      end
+    end
   end
 end

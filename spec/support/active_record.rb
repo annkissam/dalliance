@@ -42,6 +42,9 @@ end
 
 # Purely useful for test cases...
 class DallianceModel < ActiveRecord::Base
+  #We're not using the railtie in tests...
+  include Dalliance::Glue
+  
   dalliance :dalliance_success_method
 
   def dalliance_success_method
