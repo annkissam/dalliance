@@ -46,6 +46,9 @@ module Dalliance
     def increment!
       self.current_count += 1
       self.save!
+      
+      #Will this work too?
+      #Dalliance::ProgressMeter.increment_counter(:current_count, self.id)
     end
   end
 end

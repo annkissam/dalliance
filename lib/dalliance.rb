@@ -1,5 +1,8 @@
 require 'dalliance/version'
-require 'dalliance/railtie'
+
+if defined?(Rails::Railtie)
+  require 'dalliance/railtie'
+end
 
 require 'dalliance/progress_meter'
 
@@ -28,7 +31,7 @@ module Dalliance
   end
   
   included do
-    has_one :dalliance_progress_meter, :as => :dalliance_progress_model, :class_name => '::Dalliance::ProgressMeter'
+    has_one :dalliance_progress_meter, :as => :dalliance_progress_model, :class_name => '::Dalliance::ProgressMeter', :dependent => :destroy
     
     serialize :dalliance_error_hash, Hash
     
@@ -136,7 +139,7 @@ module Dalliance
     extend ActiveSupport::Concern
     
     included do
-      class_attribute :dalliance_options if respond_to?(:class_attribute)
+      class_attribute :dalliance_options
     end
     
     module ClassMethods
@@ -151,17 +154,9 @@ module Dalliance
         end
         
         if dalliance_options.nil?
-          if respond_to?(:class_attribute)
-            self.dalliance_options = {}
-          else
-            write_inheritable_attribute(:dalliance_options, {})
-          end
+          self.dalliance_options = {}
         else
-          if respond_to?(:class_attribute)
-            self.dalliance_options = self.dalliance_options.dup
-          else
-            write_inheritable_attribute(:dalliance_options, self.dalliance_options.dup)
-          end
+          self.dalliance_options = self.dalliance_options.dup
         end
         
         self.dalliance_options.merge!(options)
@@ -170,11 +165,7 @@ module Dalliance
       end
       
       def dalliance_options
-        if respond_to?(:class_attribute)
-          self.dalliance_options
-        else
-          read_inheritable_attribute(:dalliance_options)
-        end
+        self.dalliance_options
       end
     end
   end

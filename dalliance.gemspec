@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.authors     = ["Eric Sullivan"]
   s.email       = ["eric.sullivan@annkissam.com"]
   s.homepage    = "https://github.com/annkissam/dalliance"
-  s.summary     = Dalliance::VERSION::SUMMARY
+  s.summary     = %q{ Wrapper for an ActiveRecord model with a single ascynhronous method }
   s.description = %q{ Opinionated background processing for ActiveRecord w/ delayed_job & state_machine }
 
   s.rubyforge_project = "dalliance"
