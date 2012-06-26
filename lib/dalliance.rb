@@ -12,7 +12,7 @@ module Dalliance
   class << self
     def options
       @options ||= {
-        :background_processing => true,
+        :background_processing => (defined?(Rails) ? Rails.env.production? : true),
         :dalliance_progress_meter_total_count_method => :dalliance_progress_meter_total_count
       }
     end
