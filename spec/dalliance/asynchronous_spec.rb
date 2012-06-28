@@ -65,7 +65,7 @@ describe DallianceModel do
       subject.reload
       
       subject.dalliance_error_hash.should_not be_empty
-      subject.dalliance_error_hash[:error].should == RuntimeError.new
+      subject.dalliance_error_hash[:error].should == RuntimeError.name #We store the class name...
       subject.dalliance_error_hash[:message].should == 'RuntimeError'
       subject.dalliance_error_hash[:backtrace].should_not be_blank
     end

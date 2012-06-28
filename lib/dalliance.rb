@@ -47,9 +47,9 @@ module Dalliance
       state :processing_error
       state :completed
 
-      event :queue_dalliance do
-        transition :processing_error => :pending
-      end
+      #event :queue_dalliance do
+      #  transition :processing_error => :pending
+      #end
 
       event :start_dalliance do
         transition :pending => :processing
@@ -101,7 +101,7 @@ module Dalliance
       finish_dalliance!
     rescue StandardError => e
       #Save the error for future analysis...
-      self.dalliance_error_hash = {:error => e, :message => e.message, :backtrace => e.backtrace}
+      self.dalliance_error_hash = {:error => e.class.name, :message => e.message, :backtrace => e.backtrace}
 
       error_dalliance!
       
