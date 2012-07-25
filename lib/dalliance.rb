@@ -109,7 +109,8 @@ module Dalliance
       raise e unless backgound_processing
     ensure
       if dalliance_progress_meter
-        dalliance_progress_meter.destroy
+        #Works with optimistic locking...
+        Dalliance::ProgressMeter.delete(dalliance_progress_meter.id)
       end
     end
   end
