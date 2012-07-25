@@ -111,6 +111,7 @@ module Dalliance
       if dalliance_progress_meter
         #Works with optimistic locking...
         Dalliance::ProgressMeter.delete(dalliance_progress_meter.id)
+        self.dalliance_progress_meter = nil
       end
     end
   end
