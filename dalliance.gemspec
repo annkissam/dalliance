@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.email       = ["eric.sullivan@annkissam.com"]
   s.homepage    = "https://github.com/annkissam/dalliance"
   s.summary     = %q{ Wrapper for an ActiveRecord model with a single ascynhronous method }
-  s.description = %q{ Opinionated background processing for ActiveRecord w/ delayed_job & state_machine }
+  s.description = %q{ Background processing for ActiveRecord using a 'delay' method and a state_machine }
 
   s.rubyforge_project = "dalliance"
 
@@ -17,14 +17,14 @@ Gem::Specification.new do |s|
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
-  
+
   s.add_dependency('activerecord', '>= 3.0.0')
   s.add_dependency('activesupport', '>= 3.0.0')
-  
-  s.add_dependency('delayed_job', '>= 2.0.0')
+
   s.add_dependency('state_machine')
-  
-  s.add_development_dependency 'rspec'
-  s.add_development_dependency 'delayed_job_active_record'
-  s.add_development_dependency 'sqlite3'
+
+  s.add_development_dependency('rspec')
+  s.add_development_dependency('delayed_job', '>= 2.0.0')
+  s.add_development_dependency('delayed_job_active_record')
+  s.add_development_dependency('sqlite3')
 end

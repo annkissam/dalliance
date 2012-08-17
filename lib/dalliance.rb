@@ -8,33 +8,34 @@ require 'dalliance/progress_meter'
 
 module Dalliance
   extend ActiveSupport::Concern
-  
+
   class << self
     def options
       @options ||= {
         :background_processing => (defined?(Rails) ? Rails.env.production? : true),
-        :dalliance_progress_meter_total_count_method => :dalliance_progress_meter_total_count
+        :dalliance_progress_meter_total_count_method => :dalliance_progress_meter_total_count,
+        :delay_method => :delay
       }
     end
-    
+
     def background_processing?
       options[:background_processing]
     end
-    
+
     def background_processing=(value)
       options[:background_processing] = value
     end
-    
+
     def configure
       yield(self) if block_given?
     end
   end
-  
+
   included do
     has_one :dalliance_progress_meter, :as => :dalliance_progress_model, :class_name => '::Dalliance::ProgressMeter', :dependent => :destroy
-    
+
     serialize :dalliance_error_hash, Hash
-    
+
     #BEGIN state_machine(s)
     scope :pending, where(:dalliance_status => 'pending')
     scope :processing, where(:dalliance_status => 'processing')
@@ -65,37 +66,41 @@ module Dalliance
     end
     #END state_machine(s)
   end
-  
+
   module ClassMethods
     def dalliance_status_in_load_select_array
       state_machine(:dalliance_status).states.map {|state| [state.human_name, state.name] }
     end
   end
-  
+
   def error_or_completed?
     processing_error? || completed?
   end
-  
+
   def pending_or_processing?
     pending? || processing?
   end
-  
+
   #Force backgound_processing w/ true
   def dalliance_background_process(backgound_processing = nil)
     if backgound_processing || (backgound_processing.nil? && Dalliance.background_processing?)
-      delay.dalliance_process(true)
+      if respond_to?(self.class.dalliance_options[:delay_method])
+        self.send(self.class.dalliance_options[:delay_method]).dalliance_process(true)
+      else
+        raise NoMethodError.new("#{self.class.dalliance_options[:delay_method]} is undefined")
+      end
     else
       dalliance_process(false)
     end
   end
-  
+
   #backgound_processing == false will re-raise any exceptions
   def dalliance_process(backgound_processing = false)
     begin
       start_dalliance!
 
       build_dalliance_progress_meter(:total_count => calculate_dalliance_progress_meter_total_count).save!
-      
+
       self.send(self.class.dalliance_options[:dalliance_method])
 
       finish_dalliance!
@@ -104,7 +109,7 @@ module Dalliance
       self.dalliance_error_hash = {:error => e.class.name, :message => e.message, :backtrace => e.backtrace}
 
       error_dalliance!
-      
+
       #Don't raise the error if we're backgound_processing...
       raise e unless backgound_processing
     ensure
@@ -115,7 +120,7 @@ module Dalliance
       end
     end
   end
-  
+
   def dalliance_progress
     if completed?
       100
@@ -136,14 +141,14 @@ module Dalliance
       1
     end
   end
-  
+
   module Glue
     extend ActiveSupport::Concern
-    
+
     included do
       class_attribute :dalliance_options
     end
-    
+
     module ClassMethods
       def dalliance(*args)
         options = args.last.is_a?(Hash) ? Dalliance.options.merge(args.pop) : Dalliance.options
@@ -151,21 +156,21 @@ module Dalliance
         case args.length
         when 1
           options[:dalliance_method] = args[0]
-        else 
-          raise ArgumentError, "Incorrect number of Arguements provided" 
+        else
+          raise ArgumentError, "Incorrect number of Arguements provided"
         end
-        
+
         if dalliance_options.nil?
           self.dalliance_options = {}
         else
           self.dalliance_options = self.dalliance_options.dup
         end
-        
+
         self.dalliance_options.merge!(options)
-        
+
         include Dalliance
       end
-      
+
       def dalliance_options
         self.dalliance_options
       end
