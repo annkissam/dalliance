@@ -7,10 +7,14 @@ describe DallianceModel do
     Dalliance.options[:background_processing] = true
   end
 
-  context "no delay method" do
+  before do
+    Resque.remove_queue(:dalliance)
+  end
+
+  context "no worker_class" do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_success_method
-      DallianceModel.dalliance_options[:delay_method] = :not_delay
+      DallianceModel.dalliance_options[:worker_class] = nil
     end
 
     it "should raise an error" do
@@ -21,7 +25,7 @@ describe DallianceModel do
   context "success" do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_success_method
-      DallianceModel.dalliance_options[:delay_method] = :delay
+      DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::Resque
     end
 
     it "should not call the dalliance_method w/o a Delayed::Worker" do
@@ -29,21 +33,21 @@ describe DallianceModel do
       subject.reload
 
       subject.should_not be_successful
-      Delayed::Job.count.should == 1
+      Resque.size(:dalliance).should == 1
     end
 
     it "should call the dalliance_method w/ a Delayed::Worker" do
       subject.dalliance_background_process
-      Delayed::Worker.new.work_off
+      Resque::Worker.new(:dalliance).process
       subject.reload
 
       subject.should be_successful
-      Delayed::Job.count.should == 0
+      Resque.size(:dalliance).should == 0
     end
 
     it "should set the dalliance_status to completed" do
       subject.dalliance_background_process
-      Delayed::Worker.new.work_off
+      Resque::Worker.new(:dalliance).process
       subject.reload
 
       subject.should be_completed
@@ -51,7 +55,7 @@ describe DallianceModel do
 
     it "should set the dalliance_progress to 100" do
       subject.dalliance_background_process
-      Delayed::Worker.new.work_off
+      Resque::Worker.new(:dalliance).process
       subject.reload
 
       subject.dalliance_progress.should == 100
@@ -61,20 +65,20 @@ describe DallianceModel do
   context "raise error" do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_error_method
-      DallianceModel.dalliance_options[:delay_method] = :delay
+      DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::Resque
     end
 
     it "should NOT raise an error" do
       subject.dalliance_background_process
 
-      Delayed::Worker.new.work_off
+      Resque::Worker.new(:dalliance).process
 
-      Delayed::Job.count.should == 0
+      Resque.size(:dalliance).should == 0
     end
 
     it "should store the error" do
       subject.dalliance_background_process
-      Delayed::Worker.new.work_off
+      Resque::Worker.new(:dalliance).process
       subject.reload
 
       subject.dalliance_error_hash.should_not be_empty
@@ -85,7 +89,7 @@ describe DallianceModel do
 
     it "should set the dalliance_status to processing_error" do
       subject.dalliance_background_process
-      Delayed::Worker.new.work_off
+      Resque::Worker.new(:dalliance).process
       subject.reload
 
       subject.should be_processing_error
@@ -93,7 +97,7 @@ describe DallianceModel do
 
     it "should set the dalliance_progress to 0" do
       subject.dalliance_background_process
-      Delayed::Worker.new.work_off
+      Resque::Worker.new(:dalliance).process
       subject.reload
 
       subject.dalliance_progress.should == 0

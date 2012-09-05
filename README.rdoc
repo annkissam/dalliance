@@ -1,8 +1,8 @@
 = dalliance
 
-Opinionated background processing for ActiveRecord w/ delayed_job & state_machine
+Background processing for ActiveRecord w/ a 'delayable' worker & a state_machine
 
-A simple wrapper for asynchronous processing w/ error handling & a progress_meter
+Built in support for delayed_job or resque.
 
 == Getting Started
 
@@ -15,14 +15,14 @@ In your model:
     class Model < ActiveRecord::Base
       dalliance :process_method
     end
-    
+
 process_method is the name of the method to invoke for background processing
 to kick it off just call dalliance_background_process
 
 Handle your migrations:
 
    rails g dalliance:progress_meter
-   
+
    rails g dalliance:update model_name
 
 == ProgressMeter
@@ -33,7 +33,7 @@ Create a method called dalliance_progress_meter_total_count
 Inside process_method call dalliance_progress_meter.increment! after each iteration
 
 In your views you can then call dalliance_progress to get feedback on your asynchronous process
-     
+
 == Copyright
 
 Copyright (c) 2012 Annkissam. See LICENSE for details.

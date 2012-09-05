@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.email       = ["eric.sullivan@annkissam.com"]
   s.homepage    = "https://github.com/annkissam/dalliance"
   s.summary     = %q{ Wrapper for an ActiveRecord model with a single ascynhronous method }
-  s.description = %q{ Background processing for ActiveRecord using a 'delay' method and a state_machine }
+  s.description = %q{ Background processing for ActiveRecord using a 'delayable' worker and a state_machine }
 
   s.rubyforge_project = "dalliance"
 
@@ -24,7 +24,9 @@ Gem::Specification.new do |s|
   s.add_dependency('state_machine')
 
   s.add_development_dependency('rspec')
-  s.add_development_dependency('delayed_job', '>= 2.0.0')
+  s.add_development_dependency('delayed_job', '>= 3.0.0')
   s.add_development_dependency('delayed_job_active_record')
   s.add_development_dependency('sqlite3')
+
+  s.add_development_dependency('resque')
 end

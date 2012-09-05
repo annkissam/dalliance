@@ -4,6 +4,7 @@ if defined?(Rails::Railtie)
   require 'dalliance/railtie'
 end
 
+require 'dalliance/workers'
 require 'dalliance/progress_meter'
 
 module Dalliance
@@ -14,7 +15,7 @@ module Dalliance
       @options ||= {
         :background_processing => (defined?(Rails) ? Rails.env.production? : true),
         :dalliance_progress_meter_total_count_method => :dalliance_progress_meter_total_count,
-        :delay_method => :delay
+        :worker_class => detect_worker_class
       }
     end
 
@@ -28,6 +29,11 @@ module Dalliance
 
     def configure
       yield(self) if block_given?
+    end
+
+    def detect_worker_class
+      return Dalliance::Workers::DelayedJob if defined? ::Delayed::Job
+      return Dalliance::Workers::Resque     if defined? ::Resque
     end
   end
 
@@ -84,11 +90,7 @@ module Dalliance
   #Force backgound_processing w/ true
   def dalliance_background_process(backgound_processing = nil)
     if backgound_processing || (backgound_processing.nil? && Dalliance.background_processing?)
-      if respond_to?(self.class.dalliance_options[:delay_method])
-        self.send(self.class.dalliance_options[:delay_method]).dalliance_process(true)
-      else
-        raise NoMethodError.new("#{self.class.dalliance_options[:delay_method]} is undefined")
-      end
+      self.class.dalliance_options[:worker_class].enqueue(self)
     else
       dalliance_process(false)
     end

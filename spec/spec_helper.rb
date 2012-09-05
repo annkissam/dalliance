@@ -8,6 +8,7 @@ require 'state_machine'
 #Required for testing...
 require 'delayed_job'
 require 'delayed_job_active_record'
+require 'resque'
 
 require 'dalliance'
 
