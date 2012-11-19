@@ -7,6 +7,8 @@ end
 require 'dalliance/workers'
 require 'dalliance/progress_meter'
 
+require 'state_machine'
+
 module Dalliance
   extend ActiveSupport::Concern
 
