@@ -15,7 +15,7 @@ describe DallianceModel do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_success_method
       DallianceModel.dalliance_options[:worker_class] = nil
-      DallianceModel.dalliance_options[:dalliance_queue] = 'dalliance'
+      DallianceModel.dalliance_options[:queue] = 'dalliance'
     end
 
     it "should raise an error" do
@@ -27,7 +27,8 @@ describe DallianceModel do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_success_method
       DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::Resque
-      DallianceModel.dalliance_options[:dalliance_queue] = 'dalliance'
+      DallianceModel.dalliance_options[:queue] = 'dalliance'
+      DallianceModel.dalliance_options[:duration_column] = 'dalliance_duration'
     end
 
     it "should not call the dalliance_method w/o a Delayed::Worker" do
@@ -63,11 +64,21 @@ describe DallianceModel do
       subject.dalliance_progress.should == 100
     end
 
+    it "should set the dalliance_duration" do
+      subject.dalliance_duration.should == nil
+
+      subject.dalliance_background_process
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      subject.dalliance_duration.should_not == nil
+    end
+
     context "another_queue" do
       let(:queue) { 'dalliance_2'}
 
       before(:all) do
-        DallianceModel.dalliance_options[:dalliance_queue] = queue
+        DallianceModel.dalliance_options[:queue] = queue
       end
 
       before do
@@ -98,7 +109,7 @@ describe DallianceModel do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_error_method
       DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::Resque
-      DallianceModel.dalliance_options[:dalliance_queue] = 'dalliance'
+      DallianceModel.dalliance_options[:queue] = 'dalliance'
     end
 
     it "should NOT raise an error" do

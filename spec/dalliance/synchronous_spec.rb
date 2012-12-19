@@ -5,6 +5,7 @@ describe DallianceModel do
 
   before(:all) do
     DallianceModel.dalliance_options[:background_processing] = false
+    DallianceModel.dalliance_options[:duration_column] = 'dalliance_duration'
   end
 
   context "success" do
@@ -22,6 +23,15 @@ describe DallianceModel do
 
     it "should set the dalliance_progress to 100" do
       lambda { subject.dalliance_background_process }.should change(subject, :dalliance_progress).from(0).to(100)
+    end
+
+    it "should set the dalliance_duration" do
+      subject.dalliance_duration.should == nil
+
+      subject.dalliance_background_process
+      subject.reload
+
+      subject.dalliance_duration.should_not == nil
     end
   end
 

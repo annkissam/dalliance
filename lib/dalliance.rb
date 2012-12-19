@@ -8,7 +8,7 @@ require 'dalliance/workers'
 require 'dalliance/progress_meter'
 
 require 'state_machine'
-#require 'benchmark'
+require 'benchmark'
 
 module Dalliance
   extend ActiveSupport::Concern
@@ -20,7 +20,9 @@ module Dalliance
         :dalliance_progress_meter => true,
         :dalliance_progress_meter_total_count_method => :dalliance_progress_meter_total_count,
         :worker_class => detect_worker_class,
-        :dalliance_queue => 'dalliance'
+        :queue => 'dalliance',
+        :logger => detect_logger,
+        :duration_column => nil
       }
     end
 
@@ -40,8 +42,16 @@ module Dalliance
       options[:worker_class] = value
     end
 
-    def dalliance_queue=(value)
-      options[:dalliance_queue] = value
+    def queue=(value)
+      options[:queue] = value
+    end
+
+    def logger=(value)
+      options[:logger] = value
+    end
+
+    def duration_column=(value)
+      options[:duration_column] = value
     end
 
     def configure
@@ -51,6 +61,16 @@ module Dalliance
     def detect_worker_class
       return Dalliance::Workers::DelayedJob if defined? ::Delayed::Job
       return Dalliance::Workers::Resque     if defined? ::Resque
+    end
+
+    def detect_logger
+      if defined?(ActiveRecord)
+        ActiveRecord::Base.logger
+      elsif defined?(Rails)
+        Rails.logger
+      else
+        ::Logger.new(STDOUT)
+      end
     end
   end
 
@@ -107,7 +127,7 @@ module Dalliance
   #Force backgound_processing w/ true
   def dalliance_background_process(backgound_processing = nil)
     if backgound_processing || (backgound_processing.nil? && self.class.dalliance_options[:background_processing])
-      self.class.dalliance_options[:worker_class].enqueue(self, self.class.dalliance_options[:dalliance_queue])
+      self.class.dalliance_options[:worker_class].enqueue(self, self.class.dalliance_options[:queue])
     else
       dalliance_process(false)
     end
@@ -115,6 +135,8 @@ module Dalliance
 
   #backgound_processing == false will re-raise any exceptions
   def dalliance_process(backgound_processing = false)
+    start_time = Time.now
+
     begin
       start_dalliance!
 
@@ -138,6 +160,16 @@ module Dalliance
         #Works with optimistic locking...
         Dalliance::ProgressMeter.delete(dalliance_progress_meter.id)
         self.dalliance_progress_meter = nil
+      end
+
+      duration = Time.now - start_time
+
+      if self.class.dalliance_options[:logger]
+        self.class.dalliance_options[:logger].info("[dalliance] #{self.class.name}(#{id}) - #{dalliance_status} #{duration.to_i}")
+      end
+
+      if self.class.dalliance_options[:duration_column]
+        self.class.where(id: self.id).update_all(self.class.dalliance_options[:duration_column] => duration.to_i)
       end
     end
   end

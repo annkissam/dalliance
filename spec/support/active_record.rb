@@ -16,7 +16,7 @@ ActiveRecord::Schema.define do
   end
 
   add_index     :dalliance_progress_meters, [:dalliance_progress_model_id, :dalliance_progress_model_type], :name => 'by_dalliance_progress_model'
-  
+
   create_table :delayed_jobs, :force => true do |table|
     table.integer  :priority, :default => 0
     table.integer  :attempts, :default => 0
@@ -29,13 +29,14 @@ ActiveRecord::Schema.define do
     table.string   :queue
     table.timestamps
   end
-  
+
   add_index :delayed_jobs, [:priority, :run_at], :name => 'delayed_jobs_priority'
 
   create_table :dalliance_models, :force => true do |t|
-    t.text :dalliance_error_hash
-    t.string :dalliance_status, :string, :null => false, :default => 'pending'
-    
+    t.text    :dalliance_error_hash
+    t.string  :dalliance_status, :string, :null => false, :default => 'pending'
+    t.integer :dalliance_duration
+
     t.boolean :successful, :default => false
   end
 end
@@ -44,13 +45,14 @@ end
 class DallianceModel < ActiveRecord::Base
   #We're not using the railtie in tests...
   include Dalliance::Glue
-  
-  dalliance :dalliance_success_method
+
+  dalliance :dalliance_success_method,
+            :logger => nil
 
   def dalliance_success_method
     update_attribute(:successful, true)
   end
-  
+
   def dalliance_error_method
     raise RuntimeError
   end
