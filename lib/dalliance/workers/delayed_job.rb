@@ -1,8 +1,8 @@
 module Dalliance
   module Workers
     class DelayedJob < Struct.new(:instance_klass, :instance_id)
-      def self.enqueue(instance)
-        ::Delayed::Job.enqueue(self.new(instance.class.name, instance.id), :queue => 'dalliance')
+      def self.enqueue(instance, queue = 'dalliance')
+        ::Delayed::Job.enqueue(self.new(instance.class.name, instance.id), :queue => queue)
       end
 
       def perform

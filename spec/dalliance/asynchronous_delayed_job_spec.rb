@@ -4,7 +4,7 @@ describe DallianceModel do
   subject { DallianceModel.create }
 
   before(:all) do
-    Dalliance.options[:background_processing] = true
+    DallianceModel.dalliance_options[:background_processing] = true
   end
 
   before do
@@ -15,6 +15,7 @@ describe DallianceModel do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_success_method
       DallianceModel.dalliance_options[:worker_class] = nil
+      DallianceModel.dalliance_options[:dalliance_queue] = 'dalliance'
     end
 
     it "should raise an error" do
@@ -26,6 +27,7 @@ describe DallianceModel do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_success_method
       DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::DelayedJob
+      DallianceModel.dalliance_options[:dalliance_queue] = 'dalliance'
     end
 
     it "should not call the dalliance_method w/o a Delayed::Worker" do
@@ -60,12 +62,39 @@ describe DallianceModel do
 
       subject.dalliance_progress.should == 100
     end
+
+    context "another_queue" do
+      let(:queue) { 'dalliance_2'}
+
+      before(:all) do
+        DallianceModel.dalliance_options[:dalliance_queue] = queue
+      end
+
+      it "should NOT call the dalliance_method w/ a Delayed::Worker (different queue)" do
+        subject.dalliance_background_process
+        Delayed::Worker.new(:queues => [:dalliance]).work_off
+        subject.reload
+
+        subject.should_not be_successful
+        Delayed::Job.count.should == 1
+      end
+
+      it "should call the dalliance_method w/ a Delayed::Worker (same queue)" do
+        subject.dalliance_background_process
+        Delayed::Worker.new(:queues => [queue]).work_off
+        subject.reload
+
+        subject.should be_successful
+        Delayed::Job.count.should == 0
+      end
+    end
   end
 
   context "raise error" do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_error_method
       DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::DelayedJob
+      DallianceModel.dalliance_options[:dalliance_queue] = 'dalliance'
     end
 
     it "should NOT raise an error" do

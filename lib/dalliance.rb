@@ -8,6 +8,7 @@ require 'dalliance/workers'
 require 'dalliance/progress_meter'
 
 require 'state_machine'
+#require 'benchmark'
 
 module Dalliance
   extend ActiveSupport::Concern
@@ -16,17 +17,31 @@ module Dalliance
     def options
       @options ||= {
         :background_processing => (defined?(Rails) ? Rails.env.production? : true),
+        :dalliance_progress_meter => true,
         :dalliance_progress_meter_total_count_method => :dalliance_progress_meter_total_count,
-        :worker_class => detect_worker_class
+        :worker_class => detect_worker_class,
+        :dalliance_queue => 'dalliance'
       }
-    end
-
-    def background_processing?
-      options[:background_processing]
     end
 
     def background_processing=(value)
       options[:background_processing] = value
+    end
+
+    def dalliance_progress_meter=(value)
+      options[:dalliance_progress_meter] = value
+    end
+
+    def dalliance_progress_meter_total_count_method=(value)
+      options[:dalliance_progress_meter_total_count_method] = value
+    end
+
+    def worker_class=(value)
+      options[:worker_class] = value
+    end
+
+    def dalliance_queue=(value)
+      options[:dalliance_queue] = value
     end
 
     def configure
@@ -91,8 +106,8 @@ module Dalliance
 
   #Force backgound_processing w/ true
   def dalliance_background_process(backgound_processing = nil)
-    if backgound_processing || (backgound_processing.nil? && Dalliance.background_processing?)
-      self.class.dalliance_options[:worker_class].enqueue(self)
+    if backgound_processing || (backgound_processing.nil? && self.class.dalliance_options[:background_processing])
+      self.class.dalliance_options[:worker_class].enqueue(self, self.class.dalliance_options[:dalliance_queue])
     else
       dalliance_process(false)
     end
@@ -103,7 +118,9 @@ module Dalliance
     begin
       start_dalliance!
 
-      build_dalliance_progress_meter(:total_count => calculate_dalliance_progress_meter_total_count).save!
+      if self.class.dalliance_options[:dalliance_progress_meter]
+        build_dalliance_progress_meter(:total_count => calculate_dalliance_progress_meter_total_count).save!
+      end
 
       self.send(self.class.dalliance_options[:dalliance_method])
 
@@ -117,7 +134,7 @@ module Dalliance
       #Don't raise the error if we're backgound_processing...
       raise e unless backgound_processing
     ensure
-      if dalliance_progress_meter
+      if self.class.dalliance_options[:dalliance_progress_meter] && dalliance_progress_meter
         #Works with optimistic locking...
         Dalliance::ProgressMeter.delete(dalliance_progress_meter.id)
         self.dalliance_progress_meter = nil
@@ -129,7 +146,7 @@ module Dalliance
     if completed?
       100
     else
-      if dalliance_progress_meter
+      if self.class.dalliance_options[:dalliance_progress_meter] && dalliance_progress_meter
         dalliance_progress_meter.progress
       else
         0
