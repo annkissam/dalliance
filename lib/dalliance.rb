@@ -1,14 +1,11 @@
+require 'state_machine'
+require 'benchmark'
+
 require 'dalliance/version'
-
-if defined?(Rails::Railtie)
-  require 'dalliance/railtie'
-end
-
 require 'dalliance/workers'
 require 'dalliance/progress_meter'
 
-require 'state_machine'
-require 'benchmark'
+require 'dalliance/engine' if defined?(Rails)
 
 module Dalliance
   extend ActiveSupport::Concern
@@ -22,7 +19,7 @@ module Dalliance
         :worker_class => detect_worker_class,
         :queue => 'dalliance',
         :logger => detect_logger,
-        :duration_column => nil
+        :duration_column => 'dalliance_duration'
       }
     end
 

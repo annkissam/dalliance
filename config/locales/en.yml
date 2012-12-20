@@ -1,0 +1,13 @@
+en:
+  activerecord:
+    state_machines:
+      dalliance_status:
+        states:
+          pending: Pending
+          processing: Processing
+          processing_error: Processing Error
+          completed: Completed
+  attributes:
+    dalliance_status: Status
+    dalliance_error_hash: Errors
+    dalliance_duration: Processing Time
