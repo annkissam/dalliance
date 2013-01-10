@@ -40,12 +40,18 @@ describe DallianceModel do
     end
 
     it "should call the dalliance_method w/ a Delayed::Worker" do
+      Resque::Stat.clear(:processed)
+      Resque::Stat.clear(:failed)
+
       subject.dalliance_background_process
       Resque::Worker.new(:dalliance).process
       subject.reload
 
       subject.should be_successful
       Resque.size(:dalliance).should == 0
+
+      Resque::Stat[:processed].should == 1
+      Resque::Stat[:failed].should == 0
     end
 
     it "should set the dalliance_status to completed" do
@@ -113,11 +119,17 @@ describe DallianceModel do
     end
 
     it "should NOT raise an error" do
+      Resque::Stat.clear(:processed)
+      Resque::Stat.clear(:failed)
+
       subject.dalliance_background_process
 
       Resque::Worker.new(:dalliance).process
 
       Resque.size(:dalliance).should == 0
+
+      Resque::Stat[:processed].should == 1
+      Resque::Stat[:failed].should == 1
     end
 
     it "should store the error" do

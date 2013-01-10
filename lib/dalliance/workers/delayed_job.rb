@@ -8,6 +8,11 @@ module Dalliance
       def perform
         instance_klass.constantize.find(instance_id).dalliance_process(true)
       end
+
+      #Delayed job automatically retries, so rescue the error
+      def self.rescue_error?
+        true
+      end
     end
   end
 end

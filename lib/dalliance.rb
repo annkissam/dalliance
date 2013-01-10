@@ -151,7 +151,7 @@ module Dalliance
       error_dalliance!
 
       #Don't raise the error if we're backgound_processing...
-      raise e unless backgound_processing
+      raise e unless backgound_processing && self.class.dalliance_options[:worker_class].rescue_error?
     ensure
       if self.class.dalliance_options[:dalliance_progress_meter] && dalliance_progress_meter
         #Works with optimistic locking...

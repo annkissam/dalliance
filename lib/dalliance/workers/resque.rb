@@ -8,6 +8,11 @@ module Dalliance
       def self.perform(instance_klass, instance_id)
         instance_klass.constantize.find(instance_id).dalliance_process(true)
       end
+
+      #Resque fails, so don't rescue the error
+      def self.rescue_error?
+        false
+      end
     end
   end
 end

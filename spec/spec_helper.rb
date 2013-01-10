@@ -29,3 +29,5 @@ end
 
 #We don't need a full rails app to test...
 require 'support/active_record'
+
+#NOTE: Resque tests require REDIS $redis-server
