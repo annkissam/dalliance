@@ -111,6 +111,22 @@ module Dalliance
     def dalliance_status_in_load_select_array
       state_machine(:dalliance_status).states.map {|state| [state.human_name, state.name] }
     end
+
+    def dalliance_durations
+      self.pluck(self.dalliance_options[:duration_column].to_sym)
+    end
+
+    def average_duration
+      self.average(self.dalliance_options[:duration_column])
+    end
+
+    def min_duration
+      self.minimum(self.dalliance_options[:duration_column])
+    end
+
+    def max_duration
+      self.maximum(self.dalliance_options[:duration_column])
+    end
   end
 
   def error_or_completed?
