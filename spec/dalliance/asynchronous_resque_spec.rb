@@ -159,4 +159,37 @@ describe DallianceModel do
       subject.dalliance_progress.should == 0
     end
   end
+
+  context "validation error" do
+    before(:all) do
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_validation_error_method
+      DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::Resque
+      DallianceModel.dalliance_options[:queue] = 'dalliance'
+    end
+
+    it "should store the error" do
+      subject.dalliance_background_process
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      subject.dalliance_error_hash.should_not be_empty
+      subject.dalliance_error_hash[:successful].should == ['is invalid']
+    end
+
+    it "should set the dalliance_status to validation_error" do
+      subject.dalliance_background_process
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      subject.should be_validation_error
+    end
+
+    it "should set the dalliance_progress to 0" do
+      subject.dalliance_background_process
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      subject.dalliance_progress.should == 0
+    end
+  end
 end

@@ -65,4 +65,27 @@ describe DallianceModel do
       subject.dalliance_progress.should == 0
     end
   end
+
+  context "validation error" do
+    before(:all) do
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_validation_error_method
+    end
+
+    it "should store the error" do
+      subject.dalliance_background_process
+
+      subject.dalliance_error_hash.should_not be_empty
+      subject.dalliance_error_hash[:successful].should == ['is invalid']
+    end
+
+    it "should set the dalliance_status to validation_error" do
+      lambda { subject.dalliance_background_process }.should change(subject, :dalliance_status).from('pending').to('validation_error')
+    end
+
+    it "should set the dalliance_progress to 0" do
+      subject.dalliance_background_process
+
+      subject.dalliance_progress.should == 0
+    end
+  end
 end

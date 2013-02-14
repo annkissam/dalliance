@@ -79,12 +79,14 @@ module Dalliance
     #BEGIN state_machine(s)
     scope :pending, where(:dalliance_status => 'pending')
     scope :processing, where(:dalliance_status => 'processing')
+    scope :validation_error, where(:dalliance_status => 'validation_error')
     scope :processing_error, where(:dalliance_status => 'processing_error')
     scope :completed, where(:dalliance_status => 'completed')
 
     state_machine :dalliance_status, :initial => :pending do
       state :pending
       state :processing
+      state :validation_error
       state :processing_error
       state :completed
 
@@ -94,6 +96,10 @@ module Dalliance
 
       event :start_dalliance do
         transition :pending => :processing
+      end
+
+      event :validation_error_dalliance do
+        transition :processing => :validation_error
       end
 
       event :error_dalliance do
@@ -129,8 +135,19 @@ module Dalliance
     end
   end
 
+  def store_dalliance_validation_error!
+    self.dalliance_error_hash = {}
+
+    self.errors.each do |attribute, error|
+      self.dalliance_error_hash[attribute] ||= []
+      self.dalliance_error_hash[attribute] << error
+    end
+
+    validation_error_dalliance!
+  end
+
   def error_or_completed?
-    processing_error? || completed?
+    validation_error? || processing_error? || completed?
   end
 
   def pending_or_processing?
@@ -159,7 +176,7 @@ module Dalliance
 
       self.send(self.class.dalliance_options[:dalliance_method])
 
-      finish_dalliance!
+      finish_dalliance! unless validation_error?
     rescue StandardError => e
       #Save the error for future analysis...
       self.dalliance_error_hash = {:error => e.class.name, :message => e.message, :backtrace => e.backtrace}

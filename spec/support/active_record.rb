@@ -56,4 +56,10 @@ class DallianceModel < ActiveRecord::Base
   def dalliance_error_method
     raise RuntimeError
   end
+
+  def dalliance_validation_error_method
+    errors.add(:successful, :invalid)
+
+    store_dalliance_validation_error!
+  end
 end
