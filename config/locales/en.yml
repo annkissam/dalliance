@@ -5,6 +5,7 @@ en:
         states:
           pending: Pending
           processing: Processing
+          validation_error: Validation Error
           processing_error: Processing Error
           completed: Completed
   attributes:
