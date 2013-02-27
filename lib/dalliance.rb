@@ -216,11 +216,15 @@ module Dalliance
     end
   end
 
-  #If the progress_meter_total_count_method is not implemented just use 1...
+  #If the progress_meter_total_count_method is not implemented or raises and error just use 1...
   def calculate_dalliance_progress_meter_total_count
-    if respond_to?(self.class.dalliance_options[:dalliance_progress_meter_total_count_method])
-      self.send(self.class.dalliance_options[:dalliance_progress_meter_total_count_method])
-    else
+    begin
+      if respond_to?(self.class.dalliance_options[:dalliance_progress_meter_total_count_method])
+        self.send(self.class.dalliance_options[:dalliance_progress_meter_total_count_method])
+      else
+        1
+      end
+    rescue
       1
     end
   end
