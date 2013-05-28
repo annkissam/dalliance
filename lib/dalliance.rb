@@ -103,7 +103,7 @@ module Dalliance
       end
 
       event :error_dalliance do
-        transition :processing => :processing_error
+        transition all => :processing_error
       end
 
       event :finish_dalliance do
