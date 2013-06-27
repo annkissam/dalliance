@@ -88,4 +88,33 @@ describe DallianceModel do
       subject.dalliance_progress.should == 0
     end
   end
+
+   context "destroy" do
+    it "should return false when pending?" do
+      subject.update_column(:dalliance_status, 'pending')
+      subject.destroy.should be_false
+      subject.errors[:dalliance_status].should == ['is invalid']
+    end
+
+    it "should return false when processing?" do
+      subject.update_column(:dalliance_status, 'processing')
+      subject.destroy.should be_false
+      subject.errors[:dalliance_status].should == ['is invalid']
+    end
+
+    it "should return true when validation_error?" do
+      subject.update_column(:dalliance_status, 'validation_error')
+      subject.destroy.should be_true
+    end
+
+    it "should return true when processing_error?" do
+      subject.update_column(:dalliance_status, 'processing_error')
+      subject.destroy.should be_true
+    end
+
+    it "should return true when completed?" do
+      subject.update_column(:dalliance_status, 'completed')
+      subject.destroy.should be_true
+    end
+  end
 end

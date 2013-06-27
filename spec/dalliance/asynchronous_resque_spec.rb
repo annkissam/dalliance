@@ -83,7 +83,7 @@ describe DallianceModel do
     context "another_queue" do
       let(:queue) { 'dalliance_2'}
 
-      before(:all) do
+      before do
         DallianceModel.dalliance_options[:queue] = queue
       end
 

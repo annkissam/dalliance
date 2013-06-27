@@ -111,6 +111,8 @@ module Dalliance
       end
     end
     #END state_machine(s)
+
+    before_destroy :validate_dalliance_status
   end
 
   module ClassMethods
@@ -148,6 +150,15 @@ module Dalliance
 
   def error_or_completed?
     validation_error? || processing_error? || completed?
+  end
+
+  def validate_dalliance_status
+    unless error_or_completed?
+      errors.add(:dalliance_status, :invalid)
+      return false
+    end
+
+    true
   end
 
   def pending_or_processing?
