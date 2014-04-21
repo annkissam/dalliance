@@ -1,6 +1,8 @@
 require 'state_machine'
 require 'benchmark'
 
+require 'dalliance/state_machine'
+
 require 'dalliance/version'
 require 'dalliance/workers'
 require 'dalliance/progress_meter'
@@ -137,6 +139,12 @@ module Dalliance
     end
   end
 
+  def dalliance_log(message)
+    if self.class.dalliance_options[:logger]
+      self.class.dalliance_options[:logger].info(message)
+    end
+  end
+
   def store_dalliance_validation_error!
     self.dalliance_error_hash = {}
 
@@ -145,7 +153,20 @@ module Dalliance
       self.dalliance_error_hash[attribute] << error
     end
 
-    validation_error_dalliance!
+    begin
+      validation_error_dalliance!
+    rescue
+      begin
+        self.dalliance_status = 'validation_error'
+
+        dalliance_log("[dalliance] #{self.class.name}(#{id}) - #{dalliance_status} #{self.dalliance_error_hash}")
+
+        self.dalliance_error_hash = { error: 'Persistance Failure: See Logs' }
+
+        self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
+      rescue
+      end
+    end
   end
 
   def error_or_completed?
@@ -192,7 +213,20 @@ module Dalliance
       #Save the error for future analysis...
       self.dalliance_error_hash = {:error => e.class.name, :message => e.message, :backtrace => e.backtrace}
 
-      error_dalliance!
+      begin
+        error_dalliance!
+      rescue
+        begin
+          self.dalliance_status = 'processing_error'
+
+          dalliance_log("[dalliance] #{self.class.name}(#{id}) - #{dalliance_status} #{dalliance_error_hash}")
+
+          self.dalliance_error_hash = { error: 'Persistance Failure: See Logs' }
+
+          self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
+        rescue
+        end
+      end
 
       #Don't raise the error if we're backgound_processing...
       raise e unless backgound_processing && self.class.dalliance_options[:worker_class].rescue_error?
@@ -205,9 +239,7 @@ module Dalliance
 
       duration = Time.now - start_time
 
-      if self.class.dalliance_options[:logger]
-        self.class.dalliance_options[:logger].info("[dalliance] #{self.class.name}(#{id}) - #{dalliance_status} #{duration.to_i}")
-      end
+      dalliance_log("[dalliance] #{self.class.name}(#{id}) - #{dalliance_status} #{duration.to_i}")
 
       if self.class.dalliance_options[:duration_column]
         self.class.where(id: self.id).update_all(self.class.dalliance_options[:duration_column] => duration.to_i)

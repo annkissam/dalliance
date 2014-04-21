@@ -64,6 +64,16 @@ describe DallianceModel do
 
       subject.dalliance_progress.should == 0
     end
+
+    it "should handle persistance errors" do
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_error_method_with_state_machine_exception
+
+      expect { subject.dalliance_background_process }.to raise_error(RuntimeError)
+
+      subject.should be_processing_error
+      subject.dalliance_error_hash.should_not be_empty
+      subject.dalliance_error_hash[:error].should == 'Persistance Failure: See Logs'
+    end
   end
 
   context "validation error" do
@@ -86,6 +96,16 @@ describe DallianceModel do
       subject.dalliance_background_process
 
       subject.dalliance_progress.should == 0
+    end
+
+    it "should handle persistance errors" do
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_validation_error_method_with_state_machine_exception
+
+      subject.dalliance_background_process
+
+      subject.should be_validation_error
+      subject.dalliance_error_hash.should_not be_empty
+      subject.dalliance_error_hash[:error].should == 'Persistance Failure: See Logs'
     end
   end
 

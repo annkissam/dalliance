@@ -62,4 +62,16 @@ class DallianceModel < ActiveRecord::Base
 
     store_dalliance_validation_error!
   end
+
+  def dalliance_error_method_with_state_machine_exception
+    self.stub(:error_dalliance!).and_raise(RuntimeError.new)
+
+    dalliance_error_method
+  end
+
+  def dalliance_validation_error_method_with_state_machine_exception
+    self.stub(:validation_error_dalliance!).and_raise(RuntimeError.new)
+
+    dalliance_validation_error_method
+  end
 end
