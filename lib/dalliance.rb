@@ -163,7 +163,7 @@ module Dalliance
 
         self.dalliance_error_hash = { error: 'Persistance Failure: See Logs' }
 
-        self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
+        self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash.to_yaml )
       rescue
       end
     end
@@ -223,7 +223,7 @@ module Dalliance
 
           self.dalliance_error_hash = { error: 'Persistance Failure: See Logs' }
 
-          self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
+          self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash.to_yaml )
         rescue
         end
       end
