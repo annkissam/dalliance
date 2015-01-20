@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe DallianceModel do
+RSpec.describe DallianceModel do
   subject { DallianceModel.create }
 
   before(:all) do

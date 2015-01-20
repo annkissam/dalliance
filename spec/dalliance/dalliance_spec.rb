@@ -1,4 +1,4 @@
 require 'spec_helper'
 
-describe 'Dalliance' do
+RSpec.describe 'Dalliance' do
 end

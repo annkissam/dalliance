@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe DallianceModel do
+RSpec.describe DallianceModel do
   subject { DallianceModel.create }
 
   before(:all) do
@@ -112,29 +112,29 @@ describe DallianceModel do
    context "destroy" do
     it "should return false when pending?" do
       subject.update_column(:dalliance_status, 'pending')
-      expect(subject.destroy).to be_false
+      expect(subject.destroy).to be_falsey
       expect(subject.errors[:dalliance_status]).to eq(['is invalid'])
     end
 
     it "should return false when processing?" do
       subject.update_column(:dalliance_status, 'processing')
-      expect(subject.destroy).to be_false
+      expect(subject.destroy).to be_falsey
       expect(subject.errors[:dalliance_status]).to eq(['is invalid'])
     end
 
     it "should return true when validation_error?" do
       subject.update_column(:dalliance_status, 'validation_error')
-      expect(subject.destroy).to be_true
+      expect(subject.destroy).to be_truthy
     end
 
     it "should return true when processing_error?" do
       subject.update_column(:dalliance_status, 'processing_error')
-      expect(subject.destroy).to be_true
+      expect(subject.destroy).to be_truthy
     end
 
     it "should return true when completed?" do
       subject.update_column(:dalliance_status, 'completed')
-      expect(subject.destroy).to be_true
+      expect(subject.destroy).to be_truthy
     end
   end
 end
