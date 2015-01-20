@@ -13,6 +13,14 @@ require 'resque'
 require 'dalliance'
 
 RSpec.configure do |config|
+  config.raise_errors_for_deprecations!
+
+  config.expect_with :rspec do |c|
+    c.syntax = :expect
+  end
+
+  config.mock_with :rspec
+
   #http://blog.rubyhead.com/2010/04/27/database-during-tests/
   # config.before do
   #   ActiveRecord::Base.connection.begin_db_transaction

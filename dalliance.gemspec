@@ -23,8 +23,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency('state_machine')
 
-  # s.add_development_dependency('rspec', '>= 3.0.0')
-  s.add_development_dependency('rspec')
+  s.add_development_dependency('rspec', '>= 3.0.0')
   s.add_development_dependency('delayed_job', '>= 3.0.0')
   s.add_development_dependency('delayed_job_active_record')
   s.add_development_dependency('sqlite3')
