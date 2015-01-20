@@ -12,7 +12,7 @@ ActiveRecord::Schema.define do
     t.integer :total_count
     t.integer :progress
 
-    t.timestamps
+    t.timestamps null: false
   end
 
   add_index     :dalliance_progress_meters, [:dalliance_progress_model_id, :dalliance_progress_model_type], :name => 'by_dalliance_progress_model'
@@ -27,7 +27,7 @@ ActiveRecord::Schema.define do
     table.datetime :failed_at
     table.string   :locked_by
     table.string   :queue
-    table.timestamps
+    table.timestamps  null: false
   end
 
   add_index :delayed_jobs, [:priority, :run_at], :name => 'delayed_jobs_priority'

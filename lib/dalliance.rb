@@ -79,11 +79,11 @@ module Dalliance
     serialize :dalliance_error_hash, Hash
 
     #BEGIN state_machine(s)
-    scope :pending, where(:dalliance_status => 'pending')
-    scope :processing, where(:dalliance_status => 'processing')
-    scope :validation_error, where(:dalliance_status => 'validation_error')
-    scope :processing_error, where(:dalliance_status => 'processing_error')
-    scope :completed, where(:dalliance_status => 'completed')
+    scope :pending, -> { where(:dalliance_status => 'pending') }
+    scope :processing, -> { where(:dalliance_status => 'processing') }
+    scope :validation_error, -> { where(:dalliance_status => 'validation_error') }
+    scope :processing_error, -> { where(:dalliance_status => 'processing_error') }
+    scope :completed, -> { where(:dalliance_status => 'completed') }
 
     state_machine :dalliance_status, :initial => :pending do
       state :pending

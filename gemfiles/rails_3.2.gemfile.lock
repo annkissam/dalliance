@@ -2,8 +2,8 @@ PATH
   remote: ../
   specs:
     dalliance (0.2.9)
-      activerecord (>= 3.0.0)
-      activesupport (>= 3.0.0)
+      activerecord (>= 3.1, < 4.2)
+      activesupport (>= 3.1, < 4.2)
       state_machine
 
 GEM
@@ -67,7 +67,7 @@ GEM
       rack
     rack-ssl (1.3.4)
       rack
-    rack-test (0.6.2)
+    rack-test (0.6.3)
       rack (>= 1.0)
     rails (3.2.21)
       actionmailer (= 3.2.21)
@@ -138,5 +138,5 @@ DEPENDENCIES
   delayed_job_active_record
   rails (~> 3.2.0)
   resque
-  rspec
+  rspec (>= 3.0.0)
   sqlite3
