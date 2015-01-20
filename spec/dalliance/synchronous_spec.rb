@@ -66,7 +66,8 @@ RSpec.describe DallianceModel do
     end
 
     it "should handle persistance errors" do
-      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_error_method_with_state_machine_exception
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_error_method
+      allow_any_instance_of(DallianceModel).to receive(:error_dalliance!).and_raise(RuntimeError.new)
 
       expect { subject.dalliance_background_process }.to raise_error(RuntimeError)
 
@@ -99,7 +100,8 @@ RSpec.describe DallianceModel do
     end
 
     it "should handle persistance errors" do
-      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_validation_error_method_with_state_machine_exception
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_validation_error_method
+      allow_any_instance_of(DallianceModel).to receive(:validation_error_dalliance!).and_raise(RuntimeError.new)
 
       subject.dalliance_background_process
 
