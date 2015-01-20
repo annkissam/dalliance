@@ -35,8 +35,8 @@ describe DallianceModel do
       subject.dalliance_background_process
       subject.reload
 
-      subject.should_not be_successful
-      Delayed::Job.count.should == 1
+      expect(subject).not_to be_successful
+      expect(Delayed::Job.count).to eq(1)
     end
 
     it "should call the dalliance_method w/ a Delayed::Worker" do
@@ -44,8 +44,8 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.should be_successful
-      Delayed::Job.count.should == 0
+      expect(subject).to be_successful
+      expect(Delayed::Job.count).to eq(0)
     end
 
     it "should set the dalliance_status to completed" do
@@ -53,7 +53,7 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.should be_completed
+      expect(subject).to be_completed
     end
 
     it "should set the dalliance_progress to 100" do
@@ -61,17 +61,17 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.dalliance_progress.should == 100
+      expect(subject.dalliance_progress).to eq(100)
     end
 
     it "should set the dalliance_duration" do
-      subject.dalliance_duration.should == nil
+      expect(subject.dalliance_duration).to eq(nil)
 
       subject.dalliance_background_process
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.dalliance_duration.should_not == nil
+      expect(subject.dalliance_duration).not_to eq(nil)
     end
 
     context "another_queue" do
@@ -86,8 +86,8 @@ describe DallianceModel do
         Delayed::Worker.new(:queues => [:dalliance]).work_off
         subject.reload
 
-        subject.should_not be_successful
-        Delayed::Job.count.should == 1
+        expect(subject).not_to be_successful
+        expect(Delayed::Job.count).to eq(1)
       end
 
       it "should call the dalliance_method w/ a Delayed::Worker (same queue)" do
@@ -95,8 +95,8 @@ describe DallianceModel do
         Delayed::Worker.new(:queues => [queue]).work_off
         subject.reload
 
-        subject.should be_successful
-        Delayed::Job.count.should == 0
+        expect(subject).to be_successful
+        expect(Delayed::Job.count).to eq(0)
       end
     end
   end
@@ -113,7 +113,7 @@ describe DallianceModel do
 
       Delayed::Worker.new(:queues => [:dalliance]).work_off
 
-      Delayed::Job.count.should == 0
+      expect(Delayed::Job.count).to eq(0)
     end
 
     it "should store the error" do
@@ -121,10 +121,10 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.dalliance_error_hash.should_not be_empty
-      subject.dalliance_error_hash[:error].should == RuntimeError.name #We store the class name...
-      subject.dalliance_error_hash[:message].should == 'RuntimeError'
-      subject.dalliance_error_hash[:backtrace].should_not be_blank
+      expect(subject.dalliance_error_hash).not_to be_empty
+      expect(subject.dalliance_error_hash[:error]).to eq(RuntimeError.name) #We store the class name...
+      expect(subject.dalliance_error_hash[:message]).to eq('RuntimeError')
+      expect(subject.dalliance_error_hash[:backtrace]).not_to be_blank
     end
 
     it "should set the dalliance_status to processing_error" do
@@ -132,7 +132,7 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.should be_processing_error
+      expect(subject).to be_processing_error
     end
 
     it "should set the dalliance_progress to 0" do
@@ -140,7 +140,7 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.dalliance_progress.should == 0
+      expect(subject.dalliance_progress).to eq(0)
     end
 
     it "should handle persistance errors" do
@@ -150,9 +150,9 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.should be_processing_error
-      subject.dalliance_error_hash.should_not be_empty
-      subject.dalliance_error_hash[:error].should == 'Persistance Failure: See Logs'
+      expect(subject).to be_processing_error
+      expect(subject.dalliance_error_hash).not_to be_empty
+      expect(subject.dalliance_error_hash[:error]).to eq('Persistance Failure: See Logs')
     end
   end
 
@@ -168,8 +168,8 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.dalliance_error_hash.should_not be_empty
-      subject.dalliance_error_hash[:successful].should == ['is invalid']
+      expect(subject.dalliance_error_hash).not_to be_empty
+      expect(subject.dalliance_error_hash[:successful]).to eq(['is invalid'])
     end
 
     it "should set the dalliance_status to validation_error" do
@@ -177,7 +177,7 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.should be_validation_error
+      expect(subject).to be_validation_error
     end
 
     it "should set the dalliance_progress to 0" do
@@ -185,7 +185,7 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.dalliance_progress.should == 0
+      expect(subject.dalliance_progress).to eq(0)
     end
 
     it "should handle persistance errors" do
@@ -195,9 +195,9 @@ describe DallianceModel do
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
-      subject.should be_validation_error
-      subject.dalliance_error_hash.should_not be_empty
-      subject.dalliance_error_hash[:error].should == 'Persistance Failure: See Logs'
+      expect(subject).to be_validation_error
+      expect(subject.dalliance_error_hash).not_to be_empty
+      expect(subject.dalliance_error_hash[:error]).to eq('Persistance Failure: See Logs')
     end
   end
 end

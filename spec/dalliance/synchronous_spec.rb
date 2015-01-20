@@ -14,24 +14,24 @@ describe DallianceModel do
     end
 
     it "should call the dalliance_method" do
-      lambda { subject.dalliance_background_process }.should change(subject, :successful).from(false).to(true)
+      expect { subject.dalliance_background_process }.to change(subject, :successful).from(false).to(true)
     end
 
     it "should set the dalliance_status to completed" do
-      lambda { subject.dalliance_background_process }.should change(subject, :dalliance_status).from('pending').to('completed')
+      expect { subject.dalliance_background_process }.to change(subject, :dalliance_status).from('pending').to('completed')
     end
 
     it "should set the dalliance_progress to 100" do
-      lambda { subject.dalliance_background_process }.should change(subject, :dalliance_progress).from(0).to(100)
+      expect { subject.dalliance_background_process }.to change(subject, :dalliance_progress).from(0).to(100)
     end
 
     it "should set the dalliance_duration" do
-      subject.dalliance_duration.should == nil
+      expect(subject.dalliance_duration).to eq(nil)
 
       subject.dalliance_background_process
       subject.reload
 
-      subject.dalliance_duration.should_not == nil
+      expect(subject.dalliance_duration).not_to eq(nil)
     end
   end
 
@@ -47,22 +47,22 @@ describe DallianceModel do
     it "should store the error" do
       expect { subject.dalliance_background_process }.to raise_error(RuntimeError)
 
-      subject.dalliance_error_hash.should_not be_empty
-      subject.dalliance_error_hash[:error].should == RuntimeError.name #We store the class name...
-      subject.dalliance_error_hash[:message].should == 'RuntimeError'
-      subject.dalliance_error_hash[:backtrace].should_not be_blank
+      expect(subject.dalliance_error_hash).not_to be_empty
+      expect(subject.dalliance_error_hash[:error]).to eq(RuntimeError.name) #We store the class name...
+      expect(subject.dalliance_error_hash[:message]).to eq('RuntimeError')
+      expect(subject.dalliance_error_hash[:backtrace]).not_to be_blank
     end
 
     it "should set the dalliance_status to processing_error" do
       expect { subject.dalliance_background_process }.to raise_error(RuntimeError)
 
-      subject.should be_processing_error
+      expect(subject).to be_processing_error
     end
 
     it "should set the dalliance_progress to 0" do
       expect { subject.dalliance_background_process }.to raise_error(RuntimeError)
 
-      subject.dalliance_progress.should == 0
+      expect(subject.dalliance_progress).to eq(0)
     end
 
     it "should handle persistance errors" do
@@ -70,9 +70,9 @@ describe DallianceModel do
 
       expect { subject.dalliance_background_process }.to raise_error(RuntimeError)
 
-      subject.should be_processing_error
-      subject.dalliance_error_hash.should_not be_empty
-      subject.dalliance_error_hash[:error].should == 'Persistance Failure: See Logs'
+      expect(subject).to be_processing_error
+      expect(subject.dalliance_error_hash).not_to be_empty
+      expect(subject.dalliance_error_hash[:error]).to eq('Persistance Failure: See Logs')
     end
   end
 
@@ -84,18 +84,18 @@ describe DallianceModel do
     it "should store the error" do
       subject.dalliance_background_process
 
-      subject.dalliance_error_hash.should_not be_empty
-      subject.dalliance_error_hash[:successful].should == ['is invalid']
+      expect(subject.dalliance_error_hash).not_to be_empty
+      expect(subject.dalliance_error_hash[:successful]).to eq(['is invalid'])
     end
 
     it "should set the dalliance_status to validation_error" do
-      lambda { subject.dalliance_background_process }.should change(subject, :dalliance_status).from('pending').to('validation_error')
+      expect { subject.dalliance_background_process }.to change(subject, :dalliance_status).from('pending').to('validation_error')
     end
 
     it "should set the dalliance_progress to 0" do
       subject.dalliance_background_process
 
-      subject.dalliance_progress.should == 0
+      expect(subject.dalliance_progress).to eq(0)
     end
 
     it "should handle persistance errors" do
@@ -103,38 +103,38 @@ describe DallianceModel do
 
       subject.dalliance_background_process
 
-      subject.should be_validation_error
-      subject.dalliance_error_hash.should_not be_empty
-      subject.dalliance_error_hash[:error].should == 'Persistance Failure: See Logs'
+      expect(subject).to be_validation_error
+      expect(subject.dalliance_error_hash).not_to be_empty
+      expect(subject.dalliance_error_hash[:error]).to eq('Persistance Failure: See Logs')
     end
   end
 
    context "destroy" do
     it "should return false when pending?" do
       subject.update_column(:dalliance_status, 'pending')
-      subject.destroy.should be_false
-      subject.errors[:dalliance_status].should == ['is invalid']
+      expect(subject.destroy).to be_false
+      expect(subject.errors[:dalliance_status]).to eq(['is invalid'])
     end
 
     it "should return false when processing?" do
       subject.update_column(:dalliance_status, 'processing')
-      subject.destroy.should be_false
-      subject.errors[:dalliance_status].should == ['is invalid']
+      expect(subject.destroy).to be_false
+      expect(subject.errors[:dalliance_status]).to eq(['is invalid'])
     end
 
     it "should return true when validation_error?" do
       subject.update_column(:dalliance_status, 'validation_error')
-      subject.destroy.should be_true
+      expect(subject.destroy).to be_true
     end
 
     it "should return true when processing_error?" do
       subject.update_column(:dalliance_status, 'processing_error')
-      subject.destroy.should be_true
+      expect(subject.destroy).to be_true
     end
 
     it "should return true when completed?" do
       subject.update_column(:dalliance_status, 'completed')
-      subject.destroy.should be_true
+      expect(subject.destroy).to be_true
     end
   end
 end
