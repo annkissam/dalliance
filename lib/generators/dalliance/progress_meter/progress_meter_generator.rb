@@ -16,7 +16,7 @@ module Dalliance
     end
 
     def generate_migration
-      migration_template 'migration.rb', 'db/migrate/create_dalliance_progress_meters'
+      migration_template 'migration.rb', 'db/migrate/create_dalliance_progress_meters.rb'
     end
   end
 end
