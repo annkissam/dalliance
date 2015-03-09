@@ -119,7 +119,7 @@ module Dalliance
 
   module ClassMethods
     def dalliance_status_in_load_select_array
-      state_machine(:dalliance_status).states.map {|state| [state.human_name, state.name] }
+      state_machine(:dalliance_status).states.sort_by(&:name).map {|state| [state.human_name, state.name.to_s] }
     end
 
     def dalliance_durations

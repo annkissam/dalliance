@@ -4,3 +4,7 @@ source "http://rubygems.org"
 gemspec
 
 gem "appraisal"
+
+group :development, :test do
+  gem 'byebug'
+end

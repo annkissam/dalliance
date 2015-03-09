@@ -4,6 +4,7 @@ require 'bundler/setup'
 #Automatically included in a rails app...
 require 'active_support'
 require 'state_machine'
+require 'byebug'
 
 #Required for testing...
 require 'delayed_job'
