@@ -21,7 +21,8 @@ module Dalliance
         :worker_class => detect_worker_class,
         :queue => 'dalliance',
         :logger => detect_logger,
-        :duration_column => 'dalliance_duration'
+        :duration_column => 'dalliance_duration',
+        :honeybadger_api_key => (defined?(Rails) ? honeybadger_api_key : nil)
       }
     end
 
@@ -51,6 +52,10 @@ module Dalliance
 
     def duration_column=(value)
       options[:duration_column] = value
+    end
+
+    def honeybadger_api_key=(value)
+      options[:honeybadger_api_key] = value
     end
 
     def configure
@@ -212,6 +217,14 @@ module Dalliance
     rescue StandardError => e
       #Save the error for future analysis...
       self.dalliance_error_hash = {:error => e.class.name, :message => e.message, :backtrace => e.backtrace}
+
+      if self.dalliance_error_hash.present? && self.dalliance_options[:honeybadger_api_key].present?
+        Honeybadger.notify(
+          error_class:   self.dalliance_error_hash[:error],
+          error_message: self.dalliance_error_hash[:message],
+          # parameters:    params
+        )
+      end
 
       begin
         error_dalliance!
