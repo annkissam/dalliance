@@ -4,7 +4,6 @@ source "http://rubygems.org"
 gemspec
 
 gem "appraisal"
-gem "honeybadger"
 
 group :development, :test do
   gem 'byebug'

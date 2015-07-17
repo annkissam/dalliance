@@ -6,6 +6,7 @@ require 'dalliance/state_machine'
 require 'dalliance/version'
 require 'dalliance/workers'
 require 'dalliance/progress_meter'
+require 'dalliance/error_notification'
 
 require 'dalliance/engine' if defined?(Rails)
 
@@ -21,8 +22,7 @@ module Dalliance
         :worker_class => detect_worker_class,
         :queue => 'dalliance',
         :logger => detect_logger,
-        :duration_column => 'dalliance_duration',
-        :honeybadger_api_key => (defined?(Rails) ? honeybadger_api_key : nil)
+        :duration_column => 'dalliance_duration'
       }
     end
 
@@ -52,10 +52,6 @@ module Dalliance
 
     def duration_column=(value)
       options[:duration_column] = value
-    end
-
-    def honeybadger_api_key=(value)
-      options[:honeybadger_api_key] = value
     end
 
     def configure
@@ -218,14 +214,6 @@ module Dalliance
       #Save the error for future analysis...
       self.dalliance_error_hash = {:error => e.class.name, :message => e.message, :backtrace => e.backtrace}
 
-      if self.dalliance_error_hash.present? && self.dalliance_options[:honeybadger_api_key].present?
-        Honeybadger.notify(
-          error_class:   self.dalliance_error_hash[:error],
-          error_message: self.dalliance_error_hash[:message],
-          # parameters:    params
-        )
-      end
-
       begin
         error_dalliance!
       rescue
@@ -257,6 +245,10 @@ module Dalliance
       if self.class.dalliance_options[:duration_column]
         self.class.where(id: self.id).update_all(self.class.dalliance_options[:duration_column] => duration.to_i)
       end
+    end
+
+    if errors.present?
+      Dalliance::ErrorNotification.new.notify(errors)
     end
   end
 
