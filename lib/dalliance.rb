@@ -6,7 +6,6 @@ require 'dalliance/state_machine'
 require 'dalliance/version'
 require 'dalliance/workers'
 require 'dalliance/progress_meter'
-require 'dalliance/error_notification'
 
 require 'dalliance/engine' if defined?(Rails)
 
@@ -22,7 +21,8 @@ module Dalliance
         :worker_class => detect_worker_class,
         :queue => 'dalliance',
         :logger => detect_logger,
-        :duration_column => 'dalliance_duration'
+        :duration_column => 'dalliance_duration',
+        :error_notifer => nil
       }
     end
 
@@ -52,6 +52,10 @@ module Dalliance
 
     def duration_column=(value)
       options[:duration_column] = value
+    end
+
+    def error_notifier=(value)
+      options[:error_notifier] = value
     end
 
     def configure
@@ -170,6 +174,10 @@ module Dalliance
     end
   end
 
+  def error_notifier
+    self.dalliance_options[:error_notifier]
+  end
+
   def error_or_completed?
     validation_error? || processing_error? || completed?
   end
@@ -247,8 +255,8 @@ module Dalliance
       end
     end
 
-    if errors.present?
-      Dalliance::ErrorNotification.new.notify(errors)
+    if errors.present? && error_notifier.present?
+      error_notifier.call(errors)
     end
   end
 
