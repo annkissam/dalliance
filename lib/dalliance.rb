@@ -239,6 +239,7 @@ module Dalliance
 
       #Don't raise the error if we're backgound_processing...
       raise e unless backgound_processing && self.class.dalliance_options[:worker_class].rescue_error?
+        error_notifier.call(e) if error_notifier.present?
     ensure
       if self.class.dalliance_options[:dalliance_progress_meter] && dalliance_progress_meter
         #Works with optimistic locking...
@@ -253,10 +254,6 @@ module Dalliance
       if self.class.dalliance_options[:duration_column]
         self.class.where(id: self.id).update_all(self.class.dalliance_options[:duration_column] => duration.to_i)
       end
-    end
-
-    if errors.present? && error_notifier.present?
-      error_notifier.call(errors)
     end
   end
 
