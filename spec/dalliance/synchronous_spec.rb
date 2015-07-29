@@ -75,6 +75,17 @@ RSpec.describe DallianceModel do
       expect(subject.dalliance_error_hash).not_to be_empty
       expect(subject.dalliance_error_hash[:error]).to eq('Persistance Failure: See Logs')
     end
+
+    context "error_notifier" do
+      it "should pass the errors" do
+        DallianceModel.dalliance_options[:error_notifier] = ->(error){ @error_report = "#{error}" }
+        allow_any_instance_of(DallianceModel).to receive(:error_dalliance!).and_raise(RuntimeError.new)
+
+        expect { subject.dalliance_background_process }.to raise_error(RuntimeError)
+
+        expect(@error_report).to eq('RuntimeError')
+      end
+    end
   end
 
   context "validation error" do

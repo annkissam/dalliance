@@ -222,6 +222,8 @@ module Dalliance
       #Save the error for future analysis...
       self.dalliance_error_hash = {:error => e.class.name, :message => e.message, :backtrace => e.backtrace}
 
+      error_notifier.call(e) if error_notifier.present?
+
       begin
         error_dalliance!
       rescue
@@ -240,6 +242,7 @@ module Dalliance
       #Don't raise the error if we're backgound_processing...
       raise e unless backgound_processing && self.class.dalliance_options[:worker_class].rescue_error?
         error_notifier.call(e) if error_notifier.present?
+
     ensure
       if self.class.dalliance_options[:dalliance_progress_meter] && dalliance_progress_meter
         #Works with optimistic locking...
