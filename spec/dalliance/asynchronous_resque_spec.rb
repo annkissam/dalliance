@@ -178,7 +178,6 @@ RSpec.describe DallianceModel do
 
         subject.dalliance_background_process
         Resque::Worker.new(:dalliance).process
-        subject.reload
 
         expect(@error_report).to eq('RuntimeError')
       end

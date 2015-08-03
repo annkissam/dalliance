@@ -22,7 +22,7 @@ module Dalliance
         :queue => 'dalliance',
         :logger => detect_logger,
         :duration_column => 'dalliance_duration',
-        :error_notifier => nil
+        :error_notifier => ->(e){}
       }
     end
 
@@ -195,14 +195,6 @@ module Dalliance
     pending? || processing?
   end
 
-  def error_report(e)
-    if error_notifier.present?
-      error_notifier.call(e)
-    end
-
-    raise e
-  end
-
   #Force backgound_processing w/ true
   def dalliance_background_process(backgound_processing = nil)
     if backgound_processing || (backgound_processing.nil? && self.class.dalliance_options[:background_processing])
@@ -245,8 +237,10 @@ module Dalliance
         end
       end
 
+      error_notifier.call(e)
+
       #Don't raise the error if we're backgound_processing...
-      raise error_report(e) unless backgound_processing && self.class.dalliance_options[:worker_class].rescue_error?
+      raise e unless backgound_processing && self.class.dalliance_options[:worker_class].rescue_error?
     ensure
       if self.class.dalliance_options[:dalliance_progress_meter] && dalliance_progress_meter
         #Works with optimistic locking...

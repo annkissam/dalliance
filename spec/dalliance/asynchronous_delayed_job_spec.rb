@@ -162,9 +162,8 @@ RSpec.describe DallianceModel do
 
         subject.dalliance_background_process
         Delayed::Worker.new(:queues => [:dalliance]).work_off
-        subject.reload
 
-        expect(@error_report).to eq(nil) # Still processing, error not thrown yet...
+        expect(@error_report).to eq('RuntimeError')
       end
     end
   end
