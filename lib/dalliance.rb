@@ -21,7 +21,8 @@ module Dalliance
         :worker_class => detect_worker_class,
         :queue => 'dalliance',
         :logger => detect_logger,
-        :duration_column => 'dalliance_duration'
+        :duration_column => 'dalliance_duration',
+        :error_notifier => ->(e){}
       }
     end
 
@@ -51,6 +52,10 @@ module Dalliance
 
     def duration_column=(value)
       options[:duration_column] = value
+    end
+
+    def error_notifier=(value)
+      options[:error_notifier] = value
     end
 
     def configure
@@ -169,6 +174,10 @@ module Dalliance
     end
   end
 
+  def error_notifier
+    self.dalliance_options[:error_notifier]
+  end
+
   def error_or_completed?
     validation_error? || processing_error? || completed?
   end
@@ -227,6 +236,8 @@ module Dalliance
         rescue
         end
       end
+
+      error_notifier.call(e)
 
       #Don't raise the error if we're backgound_processing...
       raise e unless backgound_processing && self.class.dalliance_options[:worker_class].rescue_error?
