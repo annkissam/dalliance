@@ -9,8 +9,8 @@ en:
           processing_error: Processing Error
           completed: Completed
     attributes:
-      dalliance_status: Status
-      dalliance_error_hash: Errors
-      dalliance_duration: Processing Time
-  dalliance:
-    dalliance_status_in: Status
+      dalliance_model:
+        dalliance_status: Status
+        dalliance_error_hash: Errors
+        dalliance_duration: Processing Time
+        dalliance_status_in: Status
