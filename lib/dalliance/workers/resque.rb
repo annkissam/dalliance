@@ -1,17 +1,36 @@
 module Dalliance
   module Workers
-    class Resque
-      def self.enqueue(instance, queue = 'dalliance')
-        ::Resque.enqueue_to(queue, self, instance.class.name, instance.id)
-      end
+    if defined?(Rails) && ::Rails::VERSION::MAJOR == 4 && ::Rails::VERSION::MINOR >= 2
+      class Resque < ::ActiveJob::Base
+        queue_as :dalliance
 
-      def self.perform(instance_klass, instance_id)
-        instance_klass.constantize.find(instance_id).dalliance_process(true)
-      end
+        def self.enqueue(instance, queue = 'dalliance')
+          Dalliance::Workers::Resque.set(queue: queue).perform_later(instance.class.name, instance.id)
+        end
 
-      #Resque fails, so don't rescue the error
-      def self.rescue_error?
-        false
+        def perform(instance_klass, instance_id)
+          instance_klass.constantize.find(instance_id).dalliance_process(true)
+        end
+
+        #Resque fails, so don't rescue the error
+        def self.rescue_error?
+          false
+        end
+      end
+    else
+      class Resque
+        def self.enqueue(instance, queue = 'dalliance')
+          ::Resque.enqueue_to(queue, self, instance.class.name, instance.id)
+        end
+
+        def self.perform(instance_klass, instance_id)
+          instance_klass.constantize.find(instance_id).dalliance_process(true)
+        end
+
+        #Resque fails, so don't rescue the error
+        def self.rescue_error?
+          false
+        end
       end
     end
   end

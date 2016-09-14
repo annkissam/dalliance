@@ -3,6 +3,12 @@ require 'bundler/setup'
 
 #Automatically included in a rails app...
 require 'active_support'
+
+begin
+  require 'active_job'
+rescue LoadError
+end
+
 require 'state_machine'
 require 'byebug'
 

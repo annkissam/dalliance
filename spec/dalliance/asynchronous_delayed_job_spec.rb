@@ -5,6 +5,9 @@ RSpec.describe DallianceModel do
 
   before(:all) do
     DallianceModel.dalliance_options[:background_processing] = true
+    if defined?(ActiveJob)
+      ActiveJob::Base.queue_adapter = :delayed_job
+    end
   end
 
   before do
