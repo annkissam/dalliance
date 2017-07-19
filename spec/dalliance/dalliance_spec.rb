@@ -24,4 +24,30 @@ RSpec.describe 'Dalliance' do
       expect(DallianceModel.human_attribute_name(:dalliance_status)).to eq ('Status')
     end
   end
+
+  context "processing_queue" do
+    before do
+      DallianceModel.dalliance_options[:queue] = queue
+    end
+
+    context "string" do
+      let(:queue) { 'dalliance_2'}
+
+      specify{ expect(subject.processing_queue).to eq(queue) }
+    end
+
+    context "proc" do
+      context "w/o args" do
+        let(:queue) { Proc.new{ 'dalliance_2' } }
+
+        specify{ expect(subject.processing_queue).to eq(queue.call) }
+      end
+
+      context "w/ args" do
+        let(:queue) { Proc.new{ |a,b,c| 'dalliance_2' } }
+
+        specify{ expect(subject.processing_queue).to eq(queue.call) }
+      end
+    end
+  end
 end

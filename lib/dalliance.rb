@@ -201,10 +201,18 @@ module Dalliance
     pending? || processing?
   end
 
+  def processing_queue
+    if self.class.dalliance_options[:queue].respond_to?(:call)
+      self.class.instance_exec self, &dalliance_options[:queue]
+    else
+      self.class.dalliance_options[:queue]
+    end
+  end
+
   #Force backgound_processing w/ true
   def dalliance_background_process(backgound_processing = nil)
     if backgound_processing || (backgound_processing.nil? && self.class.dalliance_options[:background_processing])
-      self.class.dalliance_options[:worker_class].enqueue(self, self.class.dalliance_options[:queue])
+      self.class.dalliance_options[:worker_class].enqueue(self, processing_queue)
     else
       dalliance_process(false)
     end
