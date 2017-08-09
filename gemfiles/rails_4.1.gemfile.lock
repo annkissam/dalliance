@@ -1,7 +1,7 @@
 PATH
   remote: ../
   specs:
-    dalliance (0.3.4)
+    dalliance (0.4.0)
       rails (>= 3.2, < 5.0)
       state_machine
 
