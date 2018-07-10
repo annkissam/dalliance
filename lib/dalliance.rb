@@ -191,7 +191,11 @@ module Dalliance
   def validate_dalliance_status
     unless error_or_completed?
       errors.add(:dalliance_status, :invalid)
-      return false
+      if defined?(Rails) && ::Rails::VERSION::MAJOR == 5 && ::Rails::VERSION::MINOR >= 0
+        throw(:abort)
+      else
+        return false
+      end
     end
 
     true

@@ -1,8 +1,8 @@
 PATH
-  remote: ../
+  remote: ..
   specs:
     dalliance (0.4.0)
-      rails (>= 3.2, < 5.0)
+      rails (>= 3.2, <= 5.0)
       state_machine
 
 GEM
@@ -137,4 +137,4 @@ DEPENDENCIES
   sqlite3
 
 BUNDLED WITH
-   1.13.1
+   1.16.0

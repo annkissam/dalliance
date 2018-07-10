@@ -9,4 +9,4 @@ group :development, :test do
   gem "byebug"
 end
 
-gemspec :path => "../"
+gemspec path: "../"

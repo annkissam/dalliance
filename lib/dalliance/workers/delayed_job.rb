@@ -1,6 +1,6 @@
 module Dalliance
   module Workers
-    if defined?(Rails) && ::Rails::VERSION::MAJOR == 4 && ::Rails::VERSION::MINOR >= 2
+    if defined?(Rails) && ::Rails::VERSION::MAJOR >= 4 && ::Rails::VERSION::MINOR >= 2
       class DelayedJob < ::ActiveJob::Base
         queue_as :dalliance
 
