@@ -6,7 +6,7 @@ ActiveRecord::Migration.verbose = false
 
 ActiveRecord::Schema.define do
   create_table :dalliance_progress_meters, :force => true do |t|
-    t.belongs_to :dalliance_progress_model, :polymorphic => true
+    t.belongs_to :dalliance_progress_model, :polymorphic => true, index: { name: "by_dalliance_progress_model" }
 
     t.integer :current_count
     t.integer :total_count
@@ -15,7 +15,7 @@ ActiveRecord::Schema.define do
     t.timestamps null: false
   end
 
-  add_index     :dalliance_progress_meters, [:dalliance_progress_model_id, :dalliance_progress_model_type], :name => 'by_dalliance_progress_model'
+  # add_index     :dalliance_progress_meters, [:dalliance_progress_model_id, :dalliance_progress_model_type], :name => 'by_dalliance_progress_model'
 
   create_table :delayed_jobs, :force => true do |table|
     table.integer  :priority, :default => 0
