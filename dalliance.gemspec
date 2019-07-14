@@ -11,8 +11,6 @@ Gem::Specification.new do |s|
   s.summary     = %q{ Wrapper for an ActiveRecord model with a single ascynhronous method }
   s.description = %q{ Background processing for ActiveRecord using a 'delayable' worker and a state_machine }
 
-  s.rubyforge_project = "dalliance"
-
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
