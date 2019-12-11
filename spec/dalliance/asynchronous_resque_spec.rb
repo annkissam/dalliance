@@ -114,6 +114,34 @@ RSpec.describe DallianceModel do
     end
   end
 
+  context 'reprocess' do
+    before :all do
+      DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::Resque
+      DallianceModel.dalliance_options[:queue] = 'dalliance'
+    end
+
+    before do
+      subject.dalliance_process
+    end
+
+    it 'successfully runs the dalliance_reprocess method' do
+      Resque::Stat.clear(:processed)
+      Resque::Stat.clear(:failed)
+
+      subject.dalliance_background_reprocess
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      aggregate_failures do
+        expect(subject).to be_successful
+        expect(Resque.size(:dalliance)).to eq(0)
+        expect(Resque::Stat[:processed]).to eq(1)
+        expect(Resque::Stat[:failed]).to eq(0)
+        expect(subject.reprocessed_count).to eq(1)
+      end
+    end
+  end
+
   context "raise error" do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_error_method

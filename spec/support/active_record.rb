@@ -38,6 +38,7 @@ ActiveRecord::Schema.define do
     t.integer :dalliance_duration
 
     t.boolean :successful, :default => false
+    t.integer :reprocessed_count, default: 0
   end
 end
 
@@ -47,10 +48,15 @@ class DallianceModel < ActiveRecord::Base
   include Dalliance::Glue
 
   dalliance :dalliance_success_method,
+            dalliance_reprocess_method: :dalliance_reprocess_method,
             :logger => nil
 
   def dalliance_success_method
     update_attribute(:successful, true)
+  end
+
+  def dalliance_reprocess_method
+    update_attribute(:reprocessed_count, self.reprocessed_count + 1)
   end
 
   def dalliance_error_method

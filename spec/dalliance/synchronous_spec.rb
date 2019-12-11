@@ -35,6 +35,50 @@ RSpec.describe DallianceModel do
     end
   end
 
+  context 'reprocess' do
+    context 'without having already processed' do
+      it 'raises an error' do
+        expect { subject.dalliance_background_reprocess }
+          .to raise_error(
+            StateMachine::InvalidTransition,
+            /^Cannot transition dalliance_status via :reprocess_dalliance from :pending.*/
+          )
+      end
+    end
+
+    context 'when the model has already processed' do
+      before do
+        subject.dalliance_background_process
+      end
+
+      it 'calls the dalliance_reprocess method' do
+        expect { subject.dalliance_background_reprocess }
+          .to change(subject, :reprocessed_count)
+          .from(0)
+          .to(1)
+      end
+
+      it 'can call the dalliance_reprocess method many times in succession' do
+        expect { 10.times { subject.dalliance_background_reprocess } }
+          .to change(subject, :reprocessed_count)
+          .from(0)
+          .to(10)
+      end
+
+      it 'sets the dalliance_status to completed' do
+        expect { subject.dalliance_background_reprocess }
+          .not_to change { subject.reload.dalliance_status }
+          .from('completed')
+      end
+
+      it 'sets the dalliance_progress to 100' do
+        expect { subject.dalliance_background_reprocess }
+          .not_to change { subject.reload.dalliance_progress }
+          .from(100)
+      end
+    end
+  end
+
   context "raise error" do
     before(:all) do
       DallianceModel.dalliance_options[:dalliance_method] = :dalliance_error_method
