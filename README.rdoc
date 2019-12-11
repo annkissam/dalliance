@@ -19,7 +19,19 @@ In your model:
 process_method is the name of the method to invoke for background processing
 to kick it off just call dalliance_background_process
 
-Handle your migrations:
+Models can also be re-processed to allow front-end users to reprocess without
+needing to loop in PMs or developers:
+
+    class Model < ActiveRecord::Base
+      dalliance :process_method,
+                dalliance_reprocess_method: :reprocessing_method
+    end
+
+Keep in mind that a record that has not already been completely processed (eg in
+a state of 'pending' or 'processing') cannot be reprocessed. Attempting to
+reprocess the record will raise an error.
+
+== Handle your migrations:
 
    rails g dalliance:progress_meter
 
