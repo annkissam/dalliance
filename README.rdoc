@@ -24,7 +24,7 @@ needing to loop in PMs or developers:
 
     class Model < ActiveRecord::Base
       dalliance :process_method,
-                dalliance_reprocess_method: :reprocessing_method
+                reprocess_method: :reprocessing_method
     end
 
 Keep in mind that a record that has not already been completely processed (eg in

@@ -245,7 +245,7 @@ module Dalliance
     reprocess_dalliance!
 
     do_dalliance_process(
-      perform_method: self.class.dalliance_options[:dalliance_reprocess_method],
+      perform_method: self.class.dalliance_options[:reprocess_method],
       background_processing: background_processing
     )
   end
@@ -346,7 +346,7 @@ module Dalliance
       #   the name of the method to call when processing the model in dalliance
       # @param [Hash] options
       #   an optional hash of options for dalliance processing
-      # @option options [Symbol] :dalliance_reprocess_method
+      # @option options [Symbol] :reprocess_method
       #   the name of the method to use to reprocess the model in dalliance
       # @option options [Boolean] :dalliance_process_meter
       #   whether or not to display a progress meter

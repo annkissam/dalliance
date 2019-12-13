@@ -48,7 +48,7 @@ class DallianceModel < ActiveRecord::Base
   include Dalliance::Glue
 
   dalliance :dalliance_success_method,
-            dalliance_reprocess_method: :dalliance_reprocess_method,
+            reprocess_method: :dalliance_reprocess_method,
             :logger => nil
 
   def dalliance_success_method
