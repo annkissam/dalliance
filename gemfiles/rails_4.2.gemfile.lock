@@ -6,7 +6,7 @@ PATH
       state_machine
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     actionmailer (4.2.9)
       actionpack (= 4.2.9)

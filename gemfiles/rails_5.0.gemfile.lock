@@ -6,7 +6,7 @@ PATH
       state_machine
 
 GEM
-  remote: http://rubygems.org/
+  remote: https://rubygems.org/
   specs:
     actioncable (5.0.0)
       actionpack (= 5.0.0)

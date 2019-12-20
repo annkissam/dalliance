@@ -46,16 +46,16 @@ module Dalliance
     #TODO: This is just a stopgap until I fix increment! to be thread-safe
     def progress
       begin
-        _progress = (current_count.to_f / total_count.to_f * 100).to_i
+        current_progress = (current_count.to_f / total_count.to_f * 100).to_i
 
         #Handle an incorrect total_count...
-        _progress = 100 if _progress > 100
+        current_progress = 100 if current_progress > 100
       rescue
         #what, are you diving by zero?
-        _progress = 0
+        current_progress = 0
       end
 
-      _progress
+      current_progress
     end
 
     def increment!
