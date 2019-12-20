@@ -4,10 +4,12 @@ require 'bundler/setup'
 #Automatically included in a rails app...
 require 'active_support'
 
+# rubocop:disable Lint/SuppressedException
 begin
   require 'active_job'
 rescue LoadError
 end
+# rubocop:enable Lint/SuppressedException
 
 require 'state_machine'
 require 'byebug'

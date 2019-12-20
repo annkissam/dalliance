@@ -21,7 +21,7 @@ RSpec.describe 'Dalliance' do
 
   context "human_attribute_name" do
     it "should display the correct locale" do
-      expect(DallianceModel.human_attribute_name(:dalliance_status)).to eq ('Status')
+      expect(DallianceModel.human_attribute_name(:dalliance_status)).to eq('Status')
     end
   end
 
@@ -44,7 +44,7 @@ RSpec.describe 'Dalliance' do
       end
 
       context "w/ args" do
-        let(:queue) { Proc.new{ |a,b,c| 'dalliance_2' } }
+        let(:queue) { Proc.new{ |_a,_b,_c| 'dalliance_2' } }
 
         specify{ expect(subject.processing_queue).to eq(queue.call) }
       end

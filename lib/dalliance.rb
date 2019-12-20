@@ -175,7 +175,9 @@ module Dalliance
         else
           self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash.to_yaml )
         end
+      # rubocop:disable Lint/SuppressedException
       rescue
+      # rubocop:enable Lint/SuppressedException
       end
     end
   end
@@ -255,7 +257,9 @@ module Dalliance
           else
             self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash.to_yaml )
           end
+        # rubocop:disable Lint/SuppressedException
         rescue
+        # rubocop:enable Lint/SuppressedException
         end
       end
 
