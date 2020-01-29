@@ -35,7 +35,7 @@ ActiveRecord::Schema.define do
   create_table :dalliance_models, :force => true do |t|
     t.text    :dalliance_error_hash
     t.string  :dalliance_status, :string, :null => false, :default => 'pending'
-    t.integer :dalliance_duration
+    t.decimal :dalliance_duration
 
     t.boolean :successful, :default => false
     t.integer :reprocessed_count, default: 0

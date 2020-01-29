@@ -301,8 +301,11 @@ module Dalliance
 
       dalliance_log("[dalliance] #{self.class.name}(#{id}) - #{dalliance_status} #{duration.to_i}")
 
-      if self.class.dalliance_options[:duration_column]
-        self.class.where(id: self.id).update_all(self.class.dalliance_options[:duration_column] => duration.to_i)
+      duration_column = self.class.dalliance_options[:duration_column]
+      if duration_column.present?
+        current_duration = self.send(duration_column) || 0
+        self.class.where(id: self.id)
+          .update_all(duration_column => current_duration + duration.to_f)
       end
     end
   end

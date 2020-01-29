@@ -49,6 +49,7 @@ RSpec.describe DallianceModel do
     context 'when the model has already processed' do
       before do
         subject.dalliance_background_process
+        subject.reload
       end
 
       it 'calls the dalliance_reprocess method' do
@@ -75,6 +76,15 @@ RSpec.describe DallianceModel do
         expect { subject.dalliance_background_reprocess }
           .not_to change { subject.reload.dalliance_progress }
           .from(100)
+      end
+
+      it 'increases the total processing time counter' do
+        original_duration = subject.dalliance_duration
+        subject.dalliance_background_reprocess
+        Delayed::Worker.new(:queues => [:dalliance]).work_off
+        subject.reload
+
+        expect(subject.dalliance_duration).to be_between(original_duration, Float::INFINITY)
       end
     end
   end
