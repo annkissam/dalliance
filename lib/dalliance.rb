@@ -118,6 +118,10 @@ module Dalliance
       event :finish_dalliance do
         transition :processing => :completed
       end
+
+      event :reprocess_dalliance do
+        transition [:validation_error, :processing_error, :completed] => :pending
+      end
     end
     #END state_machine(s)
 
@@ -215,17 +219,40 @@ module Dalliance
     end
   end
 
-  #Force backgound_processing w/ true
-  def dalliance_background_process(backgound_processing = nil)
-    if backgound_processing || (backgound_processing.nil? && self.class.dalliance_options[:background_processing])
-      self.class.dalliance_options[:worker_class].enqueue(self, processing_queue)
+  #Force background_processing w/ true
+  def dalliance_background_process(background_processing = nil)
+    if background_processing || (background_processing.nil? && self.class.dalliance_options[:background_processing])
+      self.class.dalliance_options[:worker_class].enqueue(self, processing_queue, :dalliance_process)
     else
       dalliance_process(false)
     end
   end
 
-  #backgound_processing == false will re-raise any exceptions
-  def dalliance_process(backgound_processing = false)
+  def dalliance_process(background_processing = false)
+    do_dalliance_process(
+      perform_method: self.class.dalliance_options[:dalliance_method],
+      background_processing: background_processing
+    )
+  end
+
+  def dalliance_background_reprocess(background_processing = nil)
+    if background_processing || (background_processing.nil? && self.class.dalliance_options[:background_processing])
+      self.class.dalliance_options[:worker_class].enqueue(self, processing_queue, :dalliance_reprocess)
+    else
+      dalliance_reprocess(false)
+    end
+  end
+
+  def dalliance_reprocess(background_processing = false)
+    reprocess_dalliance!
+
+    do_dalliance_process(
+      perform_method: self.class.dalliance_options[:reprocess_method],
+      background_processing: background_processing
+    )
+  end
+
+  def do_dalliance_process(perform_method:, background_processing: false)
     start_time = Time.now
 
     begin
@@ -235,7 +262,7 @@ module Dalliance
         build_dalliance_progress_meter(:total_count => calculate_dalliance_progress_meter_total_count).save!
       end
 
-      self.send(self.class.dalliance_options[:dalliance_method])
+      self.send(perform_method)
 
       finish_dalliance! unless validation_error?
     rescue StandardError => e
@@ -265,8 +292,8 @@ module Dalliance
 
       error_notifier.call(e)
 
-      #Don't raise the error if we're backgound_processing...
-      raise e unless backgound_processing && self.class.dalliance_options[:worker_class].rescue_error?
+      # Don't raise the error if we're background processing...
+      raise e unless background_processing && self.class.dalliance_options[:worker_class].rescue_error?
     ensure
       if self.class.dalliance_options[:dalliance_progress_meter] && dalliance_progress_meter
         #Works with optimistic locking...
@@ -278,8 +305,11 @@ module Dalliance
 
       dalliance_log("[dalliance] #{self.class.name}(#{id}) - #{dalliance_status} #{duration.to_i}")
 
-      if self.class.dalliance_options[:duration_column]
-        self.class.where(id: self.id).update_all(self.class.dalliance_options[:duration_column] => duration.to_i)
+      duration_column = self.class.dalliance_options[:duration_column]
+      if duration_column.present?
+        current_duration = self.send(duration_column) || 0
+        self.class.where(id: self.id)
+          .update_all(duration_column => current_duration + duration.to_f)
       end
     end
   end
@@ -317,15 +347,28 @@ module Dalliance
     end
 
     module ClassMethods
-      def dalliance(*args)
-        options = args.last.is_a?(Hash) ? Dalliance.options.merge(args.pop) : Dalliance.options
+      # Enables dalliance processing for this class.
+      #
+      # @param [Symbol|String] dalliance_method
+      #   the name of the method to call when processing the model in dalliance
+      # @param [Hash] options
+      #   an optional hash of options for dalliance processing
+      # @option options [Symbol] :reprocess_method
+      #   the name of the method to use to reprocess the model in dalliance
+      # @option options [Boolean] :dalliance_process_meter
+      #   whether or not to display a progress meter
+      # @option options [String] :queue
+      #   the name of the worker queue to use. Default 'dalliance'
+      # @option options [String] :duration_column
+      #   the name of the table column that stores the dalliance processing time. Default 'dalliance_duration'
+      # @option options [Object] :logger
+      #   the logger object to use. Can be nil
+      # @option options [Proc] :error_notifier
+      #   A proc that accepts an error object. Default is a NOP
+      def dalliance(dalliance_method, options = {})
+        opts = Dalliance.options.merge(options)
 
-        case args.length
-        when 1
-          options[:dalliance_method] = args[0]
-        else
-          raise ArgumentError, "Incorrect number of Arguements provided"
-        end
+        opts[:dalliance_method] = dalliance_method
 
         if dalliance_options.nil?
           self.dalliance_options = {}
@@ -333,7 +376,7 @@ module Dalliance
           self.dalliance_options = self.dalliance_options.dup
         end
 
-        self.dalliance_options.merge!(options)
+        self.dalliance_options.merge!(opts)
 
         include Dalliance
       end

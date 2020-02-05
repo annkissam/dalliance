@@ -77,6 +77,37 @@ RSpec.describe DallianceModel do
       expect(subject.dalliance_duration).not_to eq(nil)
     end
 
+    context 'reprocess' do
+      before(:all) do
+        DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::DelayedJob
+        DallianceModel.dalliance_options[:queue] = 'dalliance'
+      end
+
+      before do
+        subject.dalliance_process
+        subject.reload
+      end
+
+      it 'successfully runs the dalliance_reprocess method' do
+        subject.dalliance_background_reprocess
+        Delayed::Worker.new(:queues => [:dalliance]).work_off
+        subject.reload
+
+        expect(subject).to be_successful
+        expect(Delayed::Job.count).to eq(0)
+        expect(subject.reprocessed_count).to eq(1)
+      end
+
+      it 'increases the total processing time counter' do
+        original_duration = subject.dalliance_duration
+        subject.dalliance_background_reprocess
+        Delayed::Worker.new(:queues => [:dalliance]).work_off
+        subject.reload
+
+        expect(subject.dalliance_duration).to be_between(original_duration, Float::INFINITY)
+      end
+    end
+
     context "another_queue" do
       let(:queue) { 'dalliance_2'}
 
