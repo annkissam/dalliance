@@ -48,6 +48,7 @@ RSpec.describe DallianceModel do
 
     context 'when the model has already processed' do
       before do
+        DallianceModel.dalliance_options[:dalliance_method] = :dalliance_success_method
         subject.dalliance_background_process
         subject.reload
       end
@@ -175,7 +176,7 @@ RSpec.describe DallianceModel do
     end
   end
 
-   context "destroy" do
+  context "destroy" do
     it "should return false when pending?" do
       subject.update_column(:dalliance_status, 'pending')
       expect(subject.destroy).to be_falsey
