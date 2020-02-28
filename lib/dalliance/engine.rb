@@ -7,7 +7,7 @@ module Dalliance
       ActiveSupport.on_load :active_record do
         include Dalliance::Glue
 
-        ActiveRecord::ConnectionAdapters::TableDefinition.send(:include, Dalliance::Schema)
+        ActiveRecord::ConnectionAdapters::TableDefinition.include Dalliance::Schema
       end
     end
   end
