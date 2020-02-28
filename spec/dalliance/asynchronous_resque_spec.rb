@@ -116,6 +116,7 @@ RSpec.describe DallianceModel do
 
   context 'reprocess' do
     before :all do
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_success_method
       DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::Resque
       DallianceModel.dalliance_options[:queue] = 'dalliance'
     end
