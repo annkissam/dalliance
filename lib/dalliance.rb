@@ -236,20 +236,21 @@ module Dalliance
   end
 
   def dalliance_background_reprocess(background_processing = nil)
+    # Reset state to 'pending' before queueing up
+    # Otherwise the model will stay on completed/processing_error until the job
+    # is taken by a worker, which could be a long time after this method is
+    # called.
+    reprocess_dalliance!
     if background_processing || (background_processing.nil? && self.class.dalliance_options[:background_processing])
-      self.class.dalliance_options[:worker_class].enqueue(self, processing_queue, :dalliance_reprocess)
+      self.class.dalliance_options[:worker_class].enqueue(self, processing_queue, :do_dalliance_reprocess)
     else
-      dalliance_reprocess(false)
+      do_dalliance_reprocess(false)
     end
   end
 
   def dalliance_reprocess(background_processing = false)
     reprocess_dalliance!
-
-    do_dalliance_process(
-      perform_method: self.class.dalliance_options[:reprocess_method],
-      background_processing: background_processing
-    )
+    do_dalliance_reprocess(background_processing)
   end
 
   def do_dalliance_process(perform_method:, background_processing: false)
@@ -337,6 +338,19 @@ module Dalliance
     rescue
       1
     end
+  end
+
+  private
+
+  # Executes the reprocessing method defined in the model's dalliance options.
+  #
+  # @param [Boolean] background_processing
+  #   flag if this is called from a background worker. Defaults to false.
+  def do_dalliance_reprocess(background_processing = false)
+    do_dalliance_process(
+      perform_method: self.class.dalliance_options[:reprocess_method],
+      background_processing: background_processing
+    )
   end
 
   module Glue
