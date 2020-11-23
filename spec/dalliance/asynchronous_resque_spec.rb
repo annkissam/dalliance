@@ -151,6 +151,21 @@ RSpec.describe DallianceModel do
 
       expect(subject.dalliance_duration).to be_between(original_duration, Float::INFINITY)
     end
+
+    it "resets the dalliance_status to 'pending'" do
+      subject.update_column(:dalliance_status, 'processing_error')
+
+      Resque::Stat.clear(:processed)
+      Resque::Stat.clear(:failed)
+
+      expect { subject.dalliance_background_reprocess }
+        .to change(subject, :dalliance_status)
+        .to('pending')
+
+      Resque::Worker.new(:dalliance).process
+
+      expect(subject).to be_successful
+    end
   end
 
   context "raise error" do
