@@ -9,13 +9,14 @@ RSpec.describe 'Dalliance' do
 
   context "self#dalliance_status_in_load_select_array" do
     it "should return [state, human_name]" do
-      expect(DallianceModel.dalliance_status_in_load_select_array).to eq([
+      expect(DallianceModel.dalliance_status_in_load_select_array).to contain_exactly(
         ["Completed", "completed"],
         ["Pending", "pending"],
         ["Processing", "processing"],
         ["Processing Error", "processing_error"],
-        ["Validation Error", "validation_error"]
-      ])
+        ["Validation Error", "validation_error"],
+        ['Cancelled', 'cancelled']
+      )
     end
   end
 

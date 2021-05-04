@@ -91,6 +91,7 @@ module Dalliance
     scope :validation_error, -> { where(:dalliance_status => 'validation_error') }
     scope :processing_error, -> { where(:dalliance_status => 'processing_error') }
     scope :completed, -> { where(:dalliance_status => 'completed') }
+    scope :cancelled, -> { where(:dalliance_status => 'cancelled') }
 
     state_machine :dalliance_status, :initial => :pending do
       state :pending
@@ -98,6 +99,7 @@ module Dalliance
       state :validation_error
       state :processing_error
       state :completed
+      state :cancelled
 
       #event :queue_dalliance do
       #  transition :processing_error => :pending
@@ -121,6 +123,13 @@ module Dalliance
 
       event :reprocess_dalliance do
         transition [:validation_error, :processing_error, :completed] => :pending
+      end
+
+      # Flags the record as cancelled. This does NOT cause processing to stop!
+      # Each model is required to handle cancellation on its own by periodically
+      # checking the dalliance status
+      event :cancel_dalliance do
+        transition [:pending, :processing] => :cancelled
       end
     end
     #END state_machine(s)
@@ -254,6 +263,10 @@ module Dalliance
   end
 
   def do_dalliance_process(perform_method:, background_processing: false)
+    # The job might have been cancelled after it was queued, but before
+    # processing started.  Check for that up front before doing any processing.
+    return if cancelled? # method generated from AASM
+
     start_time = Time.now
 
     begin

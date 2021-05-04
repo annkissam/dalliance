@@ -12,6 +12,7 @@ RSpec.describe DallianceModel do
 
   before do
     Resque.remove_queue(:dalliance)
+    Resque.remove_queue(:notaqueue)
   end
 
   context "no worker_class" do
@@ -165,6 +166,40 @@ RSpec.describe DallianceModel do
       Resque::Worker.new(:dalliance).process
 
       expect(subject).to be_successful
+    end
+  end
+
+  context 'cancelling' do
+    before(:all) do
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_success_method
+      DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::Resque
+      DallianceModel.dalliance_options[:queue] = 'dalliance'
+    end
+
+    it 'can be cancelled after being queued' do
+      subject.dalliance_background_process
+      expect { subject.cancel_dalliance! }
+        .to change { subject.dalliance_status }
+        .from('pending')
+        .to('cancelled')
+    end
+
+    # TODO: actually dequeue pending jobs when they're cancelled
+    #       The current implementation just quits the job immediately
+    it 'does not dequeue the job' do
+      subject.dalliance_background_process
+      expect { subject.cancel_dalliance! }
+        .not_to change { Resque.size('dalliance') }
+    end
+
+    it 'does not process' do
+      subject.cancel_dalliance!
+      subject.dalliance_background_process
+
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      expect(subject.successful).to eq false
     end
   end
 
