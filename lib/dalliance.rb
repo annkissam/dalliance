@@ -204,7 +204,7 @@ module Dalliance
   end
 
   def validate_dalliance_status
-    unless error_or_completed?
+    unless error_or_completed? || cancelled?
       errors.add(:dalliance_status, :invalid)
       if defined?(Rails)
         throw(:abort)
