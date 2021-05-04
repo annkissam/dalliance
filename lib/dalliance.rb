@@ -278,7 +278,7 @@ module Dalliance
 
       self.send(perform_method)
 
-      finish_dalliance! unless validation_error?
+      finish_dalliance! unless validation_error? || cancelled?
     rescue StandardError => e
       #Save the error for future analysis...
       self.dalliance_error_hash = {:error => e.class.name, :message => e.message, :backtrace => e.backtrace}
