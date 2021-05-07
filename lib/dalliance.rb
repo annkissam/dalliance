@@ -205,7 +205,7 @@ module Dalliance
 
   def validate_dalliance_status
     unless error_or_completed? || cancelled?
-      errors.add(:dalliance_status, :invalid)
+      errors.add(:dalliance_status, "Processing must be finished or cancelled, but status is '#{dalliance_status}'")
       if defined?(Rails)
         throw(:abort)
       else
