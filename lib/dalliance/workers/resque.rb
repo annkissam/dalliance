@@ -10,6 +10,23 @@ module Dalliance
             .perform_later(instance.class.name, instance.id, perform_method.to_s)
         end
 
+        def self.dequeue(instance)
+          redis = ::Resque.redis
+          queue = instance.processing_queue
+
+          redis.everything_in_queue(queue).each do |string|
+            # Structure looks like, e.g.
+            # { 'class' => 'ActiveJob::...', 'args' => [{ 'arguments' => ['SomeClass', 123, 'dalliance_process'] }] }
+            data = ::Resque.decode(string)
+            dalliance_args = data['args'][0]['arguments']
+
+            if dalliance_args == [instance.class.name, instance.id, 'dalliance_process'] ||
+               dalliance_args == [instance.class.name, instance.id, 'dalliance_reprocess']
+              redis.remove_from_queue(queue, string)
+            end
+          end
+        end
+
         def perform(instance_klass, instance_id, perform_method)
           instance_klass
             .constantize
@@ -26,6 +43,23 @@ module Dalliance
       class Resque
         def self.enqueue(instance, queue = 'dalliance', perform_method)
           ::Resque.enqueue_to(queue, self, instance.class.name, instance.id, perform_method.to_s)
+        end
+
+        def self.dequeue(instance)
+          redis = ::Resque.redis
+          queue = instance.processing_queue
+
+          redis.everything_in_queue(queue).each do |string|
+            # Structure looks like, e.g.
+            # { 'class' => 'ActiveJob::...', 'args' => [{ 'arguments' => ['SomeClass', 123, 'dalliance_process'] }] }
+            data = ::Resque.decode(string)
+            dalliance_args = data['args'][0]['arguments']
+
+            if dalliance_args == [instance.class.name, instance.id, 'dalliance_process'] ||
+               dalliance_args == [instance.class.name, instance.id, 'dalliance_reprocess']
+              redis.remove_from_queue(queue, string)
+            end
+          end
         end
 
         def self.perform(instance_klass, instance_id, perform_method)

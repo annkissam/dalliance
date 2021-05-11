@@ -203,6 +203,25 @@ module Dalliance
     validation_error? || processing_error? || completed?
   end
 
+  # Cancels the job and removes it from the queue if has not already been taken
+  # by a worker.  If the job is processing, it is up to the job implementation
+  # to stop and do any necessary cleanup.
+  #
+  # Jobs can currently only be removed from Resque queues.  DelayedJob jobs will
+  # not be dequeued, but will immediately exit once taken by a worker.
+  def cancel_and_dequeue_dalliance!
+    should_dequeue = pending?
+
+    cancel_dalliance!
+
+    if should_dequeue
+      self.dalliance_options[:worker_class].dequeue(self)
+      dalliance_log("[dalliance] #{self.class.name}(#{id}) - #{dalliance_status} - Removed from #{processing_queue} queue")
+    end
+
+    true
+  end
+
   def validate_dalliance_status
     unless error_or_completed? || cancelled?
       errors.add(:dalliance_status, "Processing must be finished or cancelled, but status is '#{dalliance_status}'")

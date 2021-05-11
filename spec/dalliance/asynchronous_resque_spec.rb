@@ -184,12 +184,19 @@ RSpec.describe DallianceModel do
         .to('cancelled')
     end
 
-    # TODO: actually dequeue pending jobs when they're cancelled
-    #       The current implementation just quits the job immediately
-    it 'does not dequeue the job' do
-      subject.dalliance_background_process
-      expect { subject.cancel_dalliance! }
-        .not_to change { Resque.size('dalliance') }
+    it 'dequeues the job' do
+      expect { subject.dalliance_background_process }
+        .to change { Resque.size('dalliance') }
+        .from(0)
+        .to(1)
+
+      expect { subject.cancel_and_dequeue_dalliance! }
+        .to change { Resque.size('dalliance') }
+        .from(1)
+        .to(0)
+        .and change { subject.dalliance_status }
+        .from('pending')
+        .to('cancelled')
     end
 
     it 'does not process' do

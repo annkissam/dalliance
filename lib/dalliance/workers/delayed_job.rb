@@ -10,6 +10,10 @@ module Dalliance
             .perform_later(instance.class.name, instance.id, perform_method.to_s)
         end
 
+        def self.dequeue(_instance)
+          # NOP
+        end
+
         def perform(instance_klass, instance_id, perform_method)
           instance_klass
             .constantize
@@ -29,6 +33,10 @@ module Dalliance
             self.new(instance.class.name, instance.id, perform_method),
             :queue => queue
           )
+        end
+
+        def self.dequeue(_instance)
+          # NOP
         end
 
         def perform
