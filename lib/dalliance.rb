@@ -200,7 +200,7 @@ module Dalliance
   end
 
   def error_or_completed?
-    validation_error? || processing_error? || completed?
+    validation_error? || processing_error? || completed? || cancelled?
   end
 
   # Cancels the job and removes it from the queue if has not already been taken
@@ -223,7 +223,7 @@ module Dalliance
   end
 
   def validate_dalliance_status
-    unless error_or_completed? || cancelled?
+    unless error_or_completed?
       errors.add(:dalliance_status, "Processing must be finished or cancelled, but status is '#{dalliance_status}'")
       if defined?(Rails)
         throw(:abort)
