@@ -8,6 +8,7 @@ en:
           validation_error: Validation Error
           processing_error: Processing Error
           completed: Completed
+          cancel_requested: Cancellation Requested
           cancelled: Cancelled
   attributes:
     dalliance_status: Status

@@ -178,7 +178,7 @@ RSpec.describe DallianceModel do
 
     it 'can be cancelled after being queued' do
       subject.dalliance_background_process
-      expect { subject.cancel_dalliance! }
+      expect { subject.request_cancel_dalliance! and subject.cancelled_dalliance! }
         .to change { subject.dalliance_status }
         .from('pending')
         .to('cancelled')
@@ -199,8 +199,30 @@ RSpec.describe DallianceModel do
         .to('cancelled')
     end
 
+    it 'sets dalliance_status to "cancelled" if cancellation was requested' do
+      subject.dalliance_background_process
+      subject.request_cancel_dalliance!
+
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      expect(subject.dalliance_status).to eq 'cancelled'
+    end
+
+    it 'runs normally if the job does not honor the cancellation request' do
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_ignore_cancellation_method
+
+      subject.dalliance_background_process
+
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      expect(subject.successful).to eq true
+      expect(subject.dalliance_status).to eq 'completed'
+    end
+
     it 'does not process' do
-      subject.cancel_dalliance!
+      subject.request_cancel_dalliance!
       subject.dalliance_background_process
 
       Resque::Worker.new(:dalliance).process

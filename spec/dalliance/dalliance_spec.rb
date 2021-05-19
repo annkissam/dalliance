@@ -15,6 +15,7 @@ RSpec.describe 'Dalliance' do
         ["Processing", "processing"],
         ["Processing Error", "processing_error"],
         ["Validation Error", "validation_error"],
+        ["Cancellation Requested", "cancel_requested"],
         ['Cancelled', 'cancelled']
       )
     end
