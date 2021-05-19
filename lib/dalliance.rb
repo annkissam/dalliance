@@ -91,6 +91,7 @@ module Dalliance
     scope :validation_error, -> { where(:dalliance_status => 'validation_error') }
     scope :processing_error, -> { where(:dalliance_status => 'processing_error') }
     scope :completed, -> { where(:dalliance_status => 'completed') }
+    scope :cancel_requested, -> { where(:dalliance_status => 'cancel_requested') }
     scope :cancelled, -> { where(:dalliance_status => 'cancelled') }
 
     state_machine :dalliance_status, :initial => :pending do
