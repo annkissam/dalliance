@@ -91,6 +91,8 @@ module Dalliance
     scope :validation_error, -> { where(:dalliance_status => 'validation_error') }
     scope :processing_error, -> { where(:dalliance_status => 'processing_error') }
     scope :completed, -> { where(:dalliance_status => 'completed') }
+    scope :cancel_requested, -> { where(:dalliance_status => 'cancel_requested') }
+    scope :cancelled, -> { where(:dalliance_status => 'cancelled') }
 
     state_machine :dalliance_status, :initial => :pending do
       state :pending
@@ -98,6 +100,8 @@ module Dalliance
       state :validation_error
       state :processing_error
       state :completed
+      state :cancel_requested
+      state :cancelled
 
       #event :queue_dalliance do
       #  transition :processing_error => :pending
@@ -116,11 +120,22 @@ module Dalliance
       end
 
       event :finish_dalliance do
-        transition :processing => :completed
+        transition [:processing, :cancel_requested] => :completed
       end
 
       event :reprocess_dalliance do
         transition [:validation_error, :processing_error, :completed] => :pending
+      end
+
+      # Requests the record to stop processing. This does NOT cause processing
+      # to stop!  Each model is required to handle cancellation on its own by
+      # periodically checking the dalliance status
+      event :request_cancel_dalliance do
+        transition [:pending, :processing] => :cancel_requested
+      end
+
+      event :cancelled_dalliance do
+        transition [:cancel_requested] => :cancelled
       end
     end
     #END state_machine(s)
@@ -191,12 +206,34 @@ module Dalliance
   end
 
   def error_or_completed?
-    validation_error? || processing_error? || completed?
+    validation_error? || processing_error? || completed? || cancelled?
+  end
+
+  # Cancels the job and removes it from the queue if has not already been taken
+  # by a worker.  If the job is processing, it is up to the job implementation
+  # to stop and do any necessary cleanup.  If the job does not honor the
+  # cancellation request, it will finish processing as normal and finish with a
+  # dalliance_status of 'completed'.
+  #
+  # Jobs can currently only be removed from Resque queues.  DelayedJob jobs will
+  # not be dequeued, but will immediately exit once taken by a worker.
+  def cancel_and_dequeue_dalliance!
+    should_dequeue = pending?
+
+    request_cancel_dalliance!
+
+    if should_dequeue
+      self.dalliance_options[:worker_class].dequeue(self)
+      dalliance_log("[dalliance] #{self.class.name}(#{id}) - #{dalliance_status} - Removed from #{processing_queue} queue")
+      cancelled_dalliance!
+    end
+
+    true
   end
 
   def validate_dalliance_status
     unless error_or_completed?
-      errors.add(:dalliance_status, :invalid)
+      errors.add(:dalliance_status, "Processing must be finished or cancelled, but status is '#{dalliance_status}'")
       if defined?(Rails)
         throw(:abort)
       else
@@ -254,6 +291,11 @@ module Dalliance
   end
 
   def do_dalliance_process(perform_method:, background_processing: false)
+    # The job might have been cancelled after it was queued, but before
+    # processing started.  Check for that up front before doing any processing.
+    cancelled_dalliance! if cancel_requested?
+    return if cancelled? # method generated from AASM
+
     start_time = Time.now
 
     begin
@@ -265,7 +307,7 @@ module Dalliance
 
       self.send(perform_method)
 
-      finish_dalliance! unless validation_error?
+      finish_dalliance! unless validation_error? || cancelled?
     rescue StandardError => e
       #Save the error for future analysis...
       self.dalliance_error_hash = {:error => e.class.name, :message => e.message, :backtrace => e.backtrace}

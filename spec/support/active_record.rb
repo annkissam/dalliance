@@ -59,6 +59,13 @@ class DallianceModel < ActiveRecord::Base
     update_attribute(:reprocessed_count, self.reprocessed_count + 1)
   end
 
+  # Pretends that an external action requested processing to be cancelled, but
+  # ignores the request and finishes anyway.
+  def dalliance_ignore_cancellation_method
+    request_cancel_dalliance!
+    update_attribute(:successful, true)
+  end
+
   def dalliance_error_method
     raise RuntimeError
   end

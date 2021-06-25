@@ -12,6 +12,7 @@ RSpec.describe DallianceModel do
 
   before do
     Resque.remove_queue(:dalliance)
+    Resque.remove_queue(:notaqueue)
   end
 
   context "no worker_class" do
@@ -165,6 +166,69 @@ RSpec.describe DallianceModel do
       Resque::Worker.new(:dalliance).process
 
       expect(subject).to be_successful
+    end
+  end
+
+  context 'cancelling' do
+    before(:all) do
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_success_method
+      DallianceModel.dalliance_options[:worker_class] = Dalliance::Workers::Resque
+      DallianceModel.dalliance_options[:queue] = 'dalliance'
+    end
+
+    it 'can be cancelled after being queued' do
+      subject.dalliance_background_process
+      expect { subject.request_cancel_dalliance! and subject.cancelled_dalliance! }
+        .to change { subject.dalliance_status }
+        .from('pending')
+        .to('cancelled')
+    end
+
+    it 'dequeues the job' do
+      expect { subject.dalliance_background_process }
+        .to change { Resque.size('dalliance') }
+        .from(0)
+        .to(1)
+
+      expect { subject.cancel_and_dequeue_dalliance! }
+        .to change { Resque.size('dalliance') }
+        .from(1)
+        .to(0)
+        .and change { subject.dalliance_status }
+        .from('pending')
+        .to('cancelled')
+    end
+
+    it 'sets dalliance_status to "cancelled" if cancellation was requested' do
+      subject.dalliance_background_process
+      subject.request_cancel_dalliance!
+
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      expect(subject.dalliance_status).to eq 'cancelled'
+    end
+
+    it 'runs normally if the job does not honor the cancellation request' do
+      DallianceModel.dalliance_options[:dalliance_method] = :dalliance_ignore_cancellation_method
+
+      subject.dalliance_background_process
+
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      expect(subject.successful).to eq true
+      expect(subject.dalliance_status).to eq 'completed'
+    end
+
+    it 'does not process' do
+      subject.request_cancel_dalliance!
+      subject.dalliance_background_process
+
+      Resque::Worker.new(:dalliance).process
+      subject.reload
+
+      expect(subject.successful).to eq false
     end
   end
 

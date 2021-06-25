@@ -180,13 +180,15 @@ RSpec.describe DallianceModel do
     it "should return false when pending?" do
       subject.update_column(:dalliance_status, 'pending')
       expect(subject.destroy).to be_falsey
-      expect(subject.errors[:dalliance_status]).to eq(['is invalid'])
+      expect(subject.errors[:dalliance_status])
+        .to eq(["Processing must be finished or cancelled, but status is 'pending'"])
     end
 
     it "should return false when processing?" do
       subject.update_column(:dalliance_status, 'processing')
       expect(subject.destroy).to be_falsey
-      expect(subject.errors[:dalliance_status]).to eq(['is invalid'])
+      expect(subject.errors[:dalliance_status])
+        .to eq(["Processing must be finished or cancelled, but status is 'processing'"])
     end
 
     it "should return true when validation_error?" do
