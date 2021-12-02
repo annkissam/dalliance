@@ -14,6 +14,18 @@ module Dalliance
           # NOP
         end
 
+        def self.queued?(instance, queue)
+          queued_jobs =
+            Delayed::Job.where(queue: queue)
+              .pluck(:handler)
+              .map(&YAML.method(:load))
+
+          queued_jobs.any? do |job_wrapper|
+            job_wrapper.job_data['arguments'].first(2) ==
+              [instance.class.name, instance.id]
+          end
+        end
+
         def perform(instance_klass, instance_id, perform_method)
           instance_klass
             .constantize
@@ -37,6 +49,18 @@ module Dalliance
 
         def self.dequeue(_instance)
           # NOP
+        end
+
+        def self.queued?(instance, queue)
+          queued_jobs =
+            Delayed::Job.where(queue: queue)
+              .pluck(:handler)
+              .map(&YAML.method(:load))
+
+          queued_jobs.any? do |job_wrapper|
+            job_wrapper.job_data['arguments'].first(2) ==
+              [instance.class.name, instance.id]
+          end
         end
 
         def perform

@@ -27,6 +27,21 @@ module Dalliance
           end
         end
 
+        def self.queued?(instance, queue_name)
+          # All current jobs in the queue
+          queued_jobs =
+            ::Resque.redis.everything_in_queue(queue_name)
+              .map(&::Resque.method(:decode))
+
+          queued_jobs.any? do |job_info_hash|
+            job_info_hash
+              .fetch('args', [{}])
+              .first
+              .fetch('arguments', [])
+              .first(2) == [instance.class.name, instance.id]
+          end
+        end
+
         def perform(instance_klass, instance_id, perform_method)
           instance_klass
             .constantize
@@ -59,6 +74,21 @@ module Dalliance
                dalliance_args == [instance.class.name, instance.id, 'dalliance_reprocess']
               redis.remove_from_queue(queue, string)
             end
+          end
+        end
+
+        def self.queued?(instance, queue_name)
+          # All current jobs in the queue
+          queued_jobs =
+            ::Resque.redis.everything_in_queue(queue_name)
+              .map(&::Resque.method(:decode))
+
+          queued_jobs.any? do |job_info_hash|
+            job_info_hash
+              .fetch('args', [{}])
+              .first
+              .fetch('arguments', [])
+              .first(2) == [instance.class.name, instance.id]
           end
         end
 

@@ -97,6 +97,9 @@ RSpec.describe DallianceModel do
 
       it "should NOT call the dalliance_method w/ a Delayed::Worker (different queue)" do
         subject.dalliance_background_process
+
+        expect(subject).to be_queued
+
         Resque::Worker.new(:dalliance).process
         subject.reload
 
@@ -106,6 +109,9 @@ RSpec.describe DallianceModel do
 
       it "should call the dalliance_method w/ a Delayed::Worker (same queue)" do
         subject.dalliance_background_process
+
+        expect(subject).to be_queued
+
         Resque::Worker.new(queue).process
         subject.reload
 
@@ -132,6 +138,9 @@ RSpec.describe DallianceModel do
       Resque::Stat.clear(:failed)
 
       subject.dalliance_background_reprocess
+
+      expect(subject).to be_queued
+
       Resque::Worker.new(:dalliance).process
       subject.reload
 
@@ -141,6 +150,7 @@ RSpec.describe DallianceModel do
         expect(Resque::Stat[:processed]).to eq(1)
         expect(Resque::Stat[:failed]).to eq(0)
         expect(subject.reprocessed_count).to eq(1)
+        expect(subject).not_to be_queued
       end
     end
 
