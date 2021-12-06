@@ -34,11 +34,14 @@ module Dalliance
               .map(&::Resque.method(:decode))
 
           queued_jobs.any? do |job_info_hash|
-            job_info_hash
-              .fetch('args', [{}])
-              .first
-              .fetch('arguments', [])
-              .first(2) == [instance.class.name, instance.id]
+            args = job_info_hash['args']
+            next unless args.is_a?(Array)
+
+            arg = args[0]
+            next unless arg.is_a?(Hash)
+
+            arg.fetch('arguments', []).first(2) ==
+              [instance.class.name, instance.id]
           end
         end
 
@@ -84,11 +87,14 @@ module Dalliance
               .map(&::Resque.method(:decode))
 
           queued_jobs.any? do |job_info_hash|
-            job_info_hash
-              .fetch('args', [{}])
-              .first
-              .fetch('arguments', [])
-              .first(2) == [instance.class.name, instance.id]
+            args = job_info_hash['args']
+            next unless args.is_a?(Array)
+
+            arg = args[0]
+            next unless arg.is_a?(Hash)
+
+            arg.fetch('arguments', []).first(2) ==
+              [instance.class.name, instance.id]
           end
         end
 
