@@ -256,6 +256,19 @@ module Dalliance
     end
   end
 
+  # Is a job queued to the given processing queue for this record?
+  #
+  # @param queue_name [String]
+  #   the name of the queue to check for jobs.  Defaults to the configured
+  #   processing queue
+  #
+  # @return [Boolean]
+  def queued?(queue_name: processing_queue)
+
+    worker_class = self.class.dalliance_options[:worker_class]
+    worker_class.queued?(self, queue_name)
+  end
+
   #Force background_processing w/ true
   def dalliance_background_process(background_processing = nil)
     if background_processing || (background_processing.nil? && self.class.dalliance_options[:background_processing])

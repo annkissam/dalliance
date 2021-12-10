@@ -44,6 +44,7 @@ RSpec.describe DallianceModel do
 
     it "should call the dalliance_method w/ a Delayed::Worker" do
       subject.dalliance_background_process
+      expect(subject).to be_queued
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
@@ -53,6 +54,7 @@ RSpec.describe DallianceModel do
 
     it "should set the dalliance_status to completed" do
       subject.dalliance_background_process
+      expect(subject).to be_queued
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
@@ -61,6 +63,7 @@ RSpec.describe DallianceModel do
 
     it "should set the dalliance_progress to 100" do
       subject.dalliance_background_process
+      expect(subject).to be_queued
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
@@ -71,6 +74,7 @@ RSpec.describe DallianceModel do
       expect(subject.dalliance_duration).to eq(nil)
 
       subject.dalliance_background_process
+      expect(subject).to be_queued
       Delayed::Worker.new(:queues => [:dalliance]).work_off
       subject.reload
 
@@ -91,6 +95,7 @@ RSpec.describe DallianceModel do
 
       it 'successfully runs the dalliance_reprocess method' do
         subject.dalliance_background_reprocess
+        expect(subject).to be_queued
         Delayed::Worker.new(:queues => [:dalliance]).work_off
         subject.reload
 
@@ -102,6 +107,7 @@ RSpec.describe DallianceModel do
       it 'increases the total processing time counter' do
         original_duration = subject.dalliance_duration
         subject.dalliance_background_reprocess
+        expect(subject).to be_queued
         Delayed::Worker.new(:queues => [:dalliance]).work_off
         subject.reload
 
@@ -128,6 +134,8 @@ RSpec.describe DallianceModel do
 
       it "should NOT call the dalliance_method w/ a Delayed::Worker (different queue)" do
         subject.dalliance_background_process
+        expect(subject).not_to be_queued(queue_name: 'dalliance')
+        expect(subject).to be_queued(queue_name: queue)
         Delayed::Worker.new(:queues => [:dalliance]).work_off
         subject.reload
 
