@@ -1,7 +1,7 @@
 module Dalliance
   module VERSION
     MAJOR = 0
-    MINOR = 9
+    MINOR = 10
     TINY  = 0
     PRE   = nil
 
