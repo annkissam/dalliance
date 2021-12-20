@@ -11,7 +11,7 @@ rescue LoadError
 end
 # rubocop:enable Lint/SuppressedException
 
-require 'state_machine'
+require 'aasm/rspec'
 require 'byebug'
 
 #Required for testing...

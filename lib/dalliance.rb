@@ -1,9 +1,7 @@
 require 'rails'
 
-require 'state_machine'
+require 'aasm'
 require 'benchmark'
-
-require 'dalliance/state_machine'
 
 require 'dalliance/version'
 require 'dalliance/workers'
@@ -81,6 +79,8 @@ module Dalliance
   end
 
   included do
+    include ::AASM
+
     has_one :dalliance_progress_meter, :as => :dalliance_progress_model, :class_name => '::Dalliance::ProgressMeter', :dependent => :destroy
 
     serialize :dalliance_error_hash, Hash
@@ -94,48 +94,48 @@ module Dalliance
     scope :cancel_requested, -> { where(:dalliance_status => 'cancel_requested') }
     scope :cancelled, -> { where(:dalliance_status => 'cancelled') }
 
-    state_machine :dalliance_status, :initial => :pending do
-      state :pending
-      state :processing
-      state :validation_error
-      state :processing_error
-      state :completed
-      state :cancel_requested
-      state :cancelled
+    aasm :dalliance_status, initial: :pending do
+      state :pending, display: 'Pending'
+      state :processing, display: 'Processing'
+      state :validation_error, display: 'Validation Error'
+      state :processing_error, display: 'Processing Error'
+      state :completed, display: 'Completed'
+      state :cancel_requested, display: 'Cancellation Requested'
+      state :cancelled, display: 'Cancelled'
 
       #event :queue_dalliance do
-      #  transition :processing_error => :pending
+      #  transitions from: :processing_error, to: :pending
       #end
 
       event :start_dalliance do
-        transition :pending => :processing
+        transitions from: :pending, to: :processing
       end
 
       event :validation_error_dalliance do
-        transition :processing => :validation_error
+        transitions from: :processing, to: :validation_error
       end
 
       event :error_dalliance do
-        transition all => :processing_error
+        transitions to: :processing_error
       end
 
       event :finish_dalliance do
-        transition [:processing, :cancel_requested] => :completed
+        transitions from: [:processing, :cancel_requested], to: :completed
       end
 
       event :reprocess_dalliance do
-        transition [:validation_error, :processing_error, :completed] => :pending
+        transitions from: [:validation_error, :processing_error, :completed], to: :pending
       end
 
       # Requests the record to stop processing. This does NOT cause processing
       # to stop!  Each model is required to handle cancellation on its own by
       # periodically checking the dalliance status
       event :request_cancel_dalliance do
-        transition [:pending, :processing] => :cancel_requested
+        transitions from: [:pending, :processing], to: :cancel_requested
       end
 
       event :cancelled_dalliance do
-        transition [:cancel_requested] => :cancelled
+        transitions from: [:cancel_requested], to: :cancelled
       end
     end
     #END state_machine(s)
@@ -145,7 +145,9 @@ module Dalliance
 
   module ClassMethods
     def dalliance_status_in_load_select_array
-      state_machine(:dalliance_status).states.sort_by(&:name).map {|state| [state.human_name, state.name.to_s] }
+      aasm(:dalliance_status).states.sort_by(&:name).map do |state|
+        [state.human_name, state.name.to_s]
+      end
     end
 
     def dalliance_durations
