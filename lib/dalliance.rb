@@ -218,6 +218,10 @@ module Dalliance
     validation_error? || processing_error? || completed? || cancelled?
   end
 
+  def human_dalliance_status_name
+    I18n.t("activerecord.state_machines.dalliance_status.states.#{dalliance_status}")
+  end
+
   # Cancels the job and removes it from the queue if has not already been taken
   # by a worker.  If the job is processing, it is up to the job implementation
   # to stop and do any necessary cleanup.  If the job does not honor the
