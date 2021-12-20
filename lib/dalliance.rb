@@ -174,9 +174,16 @@ module Dalliance
   def store_dalliance_validation_error!
     self.dalliance_error_hash = {}
 
-    self.errors.each do |attribute, error|
-      self.dalliance_error_hash[attribute] ||= []
-      self.dalliance_error_hash[attribute] << error
+    if defined?(Rails) && ::Rails::VERSION::MAJOR >= 6 && ::Rails::VERSION::MINOR >= 1
+      self.errors.each do |error|
+        self.dalliance_error_hash[error.attribute] ||= []
+        self.dalliance_error_hash[error.attribute] << error.message
+      end
+    else
+      self.errors.each do |attribute, error|
+        self.dalliance_error_hash[attribute] ||= []
+        self.dalliance_error_hash[attribute] << error
+      end
     end
 
     begin
