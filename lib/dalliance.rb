@@ -198,11 +198,7 @@ module Dalliance
 
         self.dalliance_error_hash = { error: 'Persistance Failure: See Logs' }
 
-        if defined?(Rails) && ::Rails::VERSION::MAJOR > 3
-          self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
-        else
-          self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash.to_yaml )
-        end
+        self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
       # rubocop:disable Lint/SuppressedException
       rescue
       # rubocop:enable Lint/SuppressedException
@@ -348,11 +344,7 @@ module Dalliance
 
           self.dalliance_error_hash = { error: 'Persistance Failure: See Logs' }
 
-          if defined?(Rails) && ::Rails::VERSION::MAJOR > 3
-            self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
-          else
-            self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash.to_yaml )
-          end
+          self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
         # rubocop:disable Lint/SuppressedException
         rescue
         # rubocop:enable Lint/SuppressedException
