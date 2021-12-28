@@ -5,8 +5,8 @@ require "dalliance/version"
 Gem::Specification.new do |s|
   s.name        = "dalliance"
   s.version     = Dalliance::VERSION::STRING
-  s.authors     = ["Eric Sullivan"]
-  s.email       = ["eric.sullivan@annkissam.com"]
+  s.authors     = ["Eric Sullivan", "Nick Clifford", "Sam Carlberg"]
+  s.email       = ["eric.sullivan@annkissam.com", "nicholas.clifford@annkissam.com", "sam.carlberg@annkissam.com"]
   s.homepage    = "https://github.com/annkissam/dalliance"
   s.summary     = %q{ Wrapper for an ActiveRecord model with a single ascynhronous method }
   s.description = %q{ Background processing for ActiveRecord using a 'delayable' worker and a state_machine }
