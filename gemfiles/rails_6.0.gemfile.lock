@@ -3,7 +3,7 @@ PATH
   specs:
     dalliance (0.10.0)
       aasm
-      rails (>= 5.2, < 6.2)
+      rails (>= 5.2, < 7.1)
 
 GEM
   remote: https://rubygems.org/
