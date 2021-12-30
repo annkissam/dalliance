@@ -2,7 +2,7 @@
 
 Background processing for ActiveRecord w/ a 'delayable' worker & a state_machine
 
-Built in support for delayed_job or resque.
+Built in support for resque.
 
 == Getting Started
 

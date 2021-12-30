@@ -157,7 +157,7 @@ RSpec.describe DallianceModel do
     it 'increases the total processing time counter' do
       original_duration = subject.dalliance_duration
       subject.dalliance_background_reprocess
-      Delayed::Worker.new(:queues => [:dalliance]).work_off
+      Resque::Worker.new(:dalliance).process
       subject.reload
 
       expect(subject.dalliance_duration).to be_between(original_duration, Float::INFINITY)
