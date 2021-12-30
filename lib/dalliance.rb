@@ -63,8 +63,15 @@ module Dalliance
     end
 
     def detect_worker_class
-      return Dalliance::Workers::DelayedJob if defined? ::Delayed::Job
-      return Dalliance::Workers::Resque     if defined? ::Resque
+      if defined? ::Delayed::Job
+        ActiveSupport::Deprecation.warn(
+          'Support for Delayed::Job will be removed in future versions. ' \
+          'Use Resque instead.'
+        )
+        return Dalliance::Workers::DelayedJob
+      end
+
+      return Dalliance::Workers::Resque if defined? ::Resque
     end
 
     def detect_logger
@@ -176,7 +183,7 @@ module Dalliance
   def store_dalliance_validation_error!
     self.dalliance_error_hash = {}
 
-    if defined?(Rails) && ::Rails::VERSION::MAJOR >= 6 && ::Rails::VERSION::MINOR >= 1
+    if defined?(Rails) && Rails.gem_version >= Gem::Version.new('6.1')
       self.errors.each do |error|
         self.dalliance_error_hash[error.attribute] ||= []
         self.dalliance_error_hash[error.attribute] << error.message
