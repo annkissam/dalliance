@@ -63,14 +63,6 @@ module Dalliance
     end
 
     def detect_worker_class
-      if defined? ::Delayed::Job
-        ActiveSupport::Deprecation.warn(
-          'Support for Delayed::Job will be removed in future versions. ' \
-          'Use Resque instead.'
-        )
-        return Dalliance::Workers::DelayedJob
-      end
-
       return Dalliance::Workers::Resque if defined? ::Resque
     end
 
@@ -230,9 +222,6 @@ module Dalliance
   # to stop and do any necessary cleanup.  If the job does not honor the
   # cancellation request, it will finish processing as normal and finish with a
   # dalliance_status of 'completed'.
-  #
-  # Jobs can currently only be removed from Resque queues.  DelayedJob jobs will
-  # not be dequeued, but will immediately exit once taken by a worker.
   def cancel_and_dequeue_dalliance!
     should_dequeue = pending?
 

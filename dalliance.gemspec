@@ -16,13 +16,11 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_dependency('rails', '>= 5.2', "< 6.2")
+  s.add_dependency('rails', '>= 5.2', "< 7.1")
 
   s.add_dependency('aasm')
 
   s.add_development_dependency('rspec', '>= 3.0.0')
-  s.add_development_dependency('delayed_job', '>= 3.0.0')
-  s.add_development_dependency('delayed_job_active_record')
   s.add_development_dependency('sqlite3')
   s.add_development_dependency('resque')
   s.add_development_dependency('bundler-audit')
