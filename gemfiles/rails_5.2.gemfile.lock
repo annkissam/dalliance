@@ -1,7 +1,7 @@
 PATH
   remote: ..
   specs:
-    dalliance (0.10.0)
+    dalliance (0.11.0)
       aasm
       rails (>= 5.2, < 6.2)
 
@@ -209,4 +209,4 @@ DEPENDENCIES
   sqlite3
 
 BUNDLED WITH
-   1.17.3
+   2.3.3
