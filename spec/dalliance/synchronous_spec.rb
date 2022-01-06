@@ -40,8 +40,8 @@ RSpec.describe DallianceModel do
       it 'raises an error' do
         expect { subject.dalliance_background_reprocess }
           .to raise_error(
-            StateMachine::InvalidTransition,
-            /^Cannot transition dalliance_status via :reprocess_dalliance from :pending.*/
+            AASM::InvalidTransition,
+            /^Event 'reprocess_dalliance' cannot transition from 'pending'.*/
           )
       end
     end

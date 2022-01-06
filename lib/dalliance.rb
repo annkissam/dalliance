@@ -1,9 +1,7 @@
 require 'rails'
 
-require 'state_machine'
+require 'aasm'
 require 'benchmark'
-
-require 'dalliance/state_machine'
 
 require 'dalliance/version'
 require 'dalliance/workers'
@@ -65,8 +63,15 @@ module Dalliance
     end
 
     def detect_worker_class
-      return Dalliance::Workers::DelayedJob if defined? ::Delayed::Job
-      return Dalliance::Workers::Resque     if defined? ::Resque
+      if defined? ::Delayed::Job
+        ActiveSupport::Deprecation.warn(
+          'Support for Delayed::Job will be removed in future versions. ' \
+          'Use Resque instead.'
+        )
+        return Dalliance::Workers::DelayedJob
+      end
+
+      return Dalliance::Workers::Resque if defined? ::Resque
     end
 
     def detect_logger
@@ -81,6 +86,8 @@ module Dalliance
   end
 
   included do
+    include ::AASM
+
     has_one :dalliance_progress_meter, :as => :dalliance_progress_model, :class_name => '::Dalliance::ProgressMeter', :dependent => :destroy
 
     serialize :dalliance_error_hash, Hash
@@ -94,48 +101,48 @@ module Dalliance
     scope :cancel_requested, -> { where(:dalliance_status => 'cancel_requested') }
     scope :cancelled, -> { where(:dalliance_status => 'cancelled') }
 
-    state_machine :dalliance_status, :initial => :pending do
-      state :pending
-      state :processing
-      state :validation_error
-      state :processing_error
-      state :completed
-      state :cancel_requested
-      state :cancelled
+    aasm :dalliance_status, initial: :pending do
+      state :pending, display: 'Pending'
+      state :processing, display: 'Processing'
+      state :validation_error, display: 'Validation Error'
+      state :processing_error, display: 'Processing Error'
+      state :completed, display: 'Completed'
+      state :cancel_requested, display: 'Cancellation Requested'
+      state :cancelled, display: 'Cancelled'
 
       #event :queue_dalliance do
-      #  transition :processing_error => :pending
+      #  transitions from: :processing_error, to: :pending
       #end
 
       event :start_dalliance do
-        transition :pending => :processing
+        transitions from: :pending, to: :processing
       end
 
       event :validation_error_dalliance do
-        transition :processing => :validation_error
+        transitions from: :processing, to: :validation_error
       end
 
       event :error_dalliance do
-        transition all => :processing_error
+        transitions to: :processing_error
       end
 
       event :finish_dalliance do
-        transition [:processing, :cancel_requested] => :completed
+        transitions from: [:processing, :cancel_requested], to: :completed
       end
 
       event :reprocess_dalliance do
-        transition [:validation_error, :processing_error, :completed] => :pending
+        transitions from: [:validation_error, :processing_error, :completed], to: :pending
       end
 
       # Requests the record to stop processing. This does NOT cause processing
       # to stop!  Each model is required to handle cancellation on its own by
       # periodically checking the dalliance status
       event :request_cancel_dalliance do
-        transition [:pending, :processing] => :cancel_requested
+        transitions from: [:pending, :processing], to: :cancel_requested
       end
 
       event :cancelled_dalliance do
-        transition [:cancel_requested] => :cancelled
+        transitions from: [:cancel_requested], to: :cancelled
       end
     end
     #END state_machine(s)
@@ -145,7 +152,9 @@ module Dalliance
 
   module ClassMethods
     def dalliance_status_in_load_select_array
-      state_machine(:dalliance_status).states.sort_by(&:name).map {|state| [state.human_name, state.name.to_s] }
+      aasm(:dalliance_status).states.sort_by(&:name).map do |state|
+        [state.human_name, state.name.to_s]
+      end
     end
 
     def dalliance_durations
@@ -174,9 +183,16 @@ module Dalliance
   def store_dalliance_validation_error!
     self.dalliance_error_hash = {}
 
-    self.errors.each do |attribute, error|
-      self.dalliance_error_hash[attribute] ||= []
-      self.dalliance_error_hash[attribute] << error
+    if defined?(Rails) && Rails.gem_version >= Gem::Version.new('6.1')
+      self.errors.each do |error|
+        self.dalliance_error_hash[error.attribute] ||= []
+        self.dalliance_error_hash[error.attribute] << error.message
+      end
+    else
+      self.errors.each do |attribute, error|
+        self.dalliance_error_hash[attribute] ||= []
+        self.dalliance_error_hash[attribute] << error
+      end
     end
 
     begin
@@ -189,11 +205,7 @@ module Dalliance
 
         self.dalliance_error_hash = { error: 'Persistance Failure: See Logs' }
 
-        if defined?(Rails) && ::Rails::VERSION::MAJOR > 3
-          self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
-        else
-          self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash.to_yaml )
-        end
+        self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
       # rubocop:disable Lint/SuppressedException
       rescue
       # rubocop:enable Lint/SuppressedException
@@ -207,6 +219,10 @@ module Dalliance
 
   def error_or_completed?
     validation_error? || processing_error? || completed? || cancelled?
+  end
+
+  def human_dalliance_status_name
+    I18n.t("activerecord.state_machines.dalliance_status.states.#{dalliance_status}")
   end
 
   # Cancels the job and removes it from the queue if has not already been taken
@@ -335,11 +351,7 @@ module Dalliance
 
           self.dalliance_error_hash = { error: 'Persistance Failure: See Logs' }
 
-          if defined?(Rails) && ::Rails::VERSION::MAJOR > 3
-            self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
-          else
-            self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash.to_yaml )
-          end
+          self.class.where(id: self.id).update_all(dalliance_status: dalliance_status, dalliance_error_hash: dalliance_error_hash )
         # rubocop:disable Lint/SuppressedException
         rescue
         # rubocop:enable Lint/SuppressedException

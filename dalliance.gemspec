@@ -5,8 +5,8 @@ require "dalliance/version"
 Gem::Specification.new do |s|
   s.name        = "dalliance"
   s.version     = Dalliance::VERSION::STRING
-  s.authors     = ["Eric Sullivan"]
-  s.email       = ["eric.sullivan@annkissam.com"]
+  s.authors     = ["Eric Sullivan", "Nick Clifford", "Sam Carlberg"]
+  s.email       = ["eric.sullivan@annkissam.com", "nicholas.clifford@annkissam.com", "sam.carlberg@annkissam.com"]
   s.homepage    = "https://github.com/annkissam/dalliance"
   s.summary     = %q{ Wrapper for an ActiveRecord model with a single ascynhronous method }
   s.description = %q{ Background processing for ActiveRecord using a 'delayable' worker and a state_machine }
@@ -16,9 +16,9 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  s.add_dependency('rails', '>= 5.0', "< 6.2")
+  s.add_dependency('rails', '>= 5.2', "< 6.2")
 
-  s.add_dependency('state_machine')
+  s.add_dependency('aasm')
 
   s.add_development_dependency('rspec', '>= 3.0.0')
   s.add_development_dependency('delayed_job', '>= 3.0.0')

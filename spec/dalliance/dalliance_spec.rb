@@ -27,6 +27,13 @@ RSpec.describe 'Dalliance' do
     end
   end
 
+  context "human_dalliance_status_name" do
+    it "should display the correct locale" do
+      subject.dalliance_status = 'validation_error'
+      expect(subject.human_dalliance_status_name).to eq('Validation Error')
+    end
+  end
+
   context "processing_queue" do
     before do
       DallianceModel.dalliance_options[:queue] = queue
